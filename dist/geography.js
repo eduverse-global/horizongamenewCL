@@ -1,0 +1,29 @@
+import {DARDANELLES} from './data/dardanelles.js';
+import {LAND} from './data/land.js';
+export {LAND};
+const shapes=LAND.map(rings=>({rings,minX:Math.min(...rings[0].map(p=>p[0])),maxX:Math.max(...rings[0].map(p=>p[0])),minZ:Math.min(...rings[0].map(p=>p[1])),maxZ:Math.max(...rings[0].map(p=>p[1]))}));
+function inside(x,z,ring){let hit=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])hit=!hit;}return hit;}
+export function isLand(x,z){return shapes.some(p=>x>=p.minX&&x<=p.maxX&&z>=p.minZ&&z<=p.maxZ&&inside(x,z,p.rings[0])&&!p.rings.slice(1).some(r=>inside(x,z,r)));}
+export function inBounds(x,z){return Number.isFinite(x)&&Number.isFinite(z)&&x>=-179&&x<=179&&z>=-78&&z<=65;}
+// Index coastline edges to test continuous paths, including small islands between samples.
+const edgeCells=new Map();let edgeId=0;
+for(const p of shapes)for(const ring of p.rings)for(let i=1;i<ring.length;i++){const a=ring[i-1],b=ring[i];const e={id:edgeId++,a,b,minX:Math.min(a[0],b[0]),maxX:Math.max(a[0],b[0]),minZ:Math.min(a[1],b[1]),maxZ:Math.max(a[1],b[1])};for(let x=Math.floor(e.minX/4);x<=Math.floor(e.maxX/4);x++)for(let z=Math.floor(e.minZ/4);z<=Math.floor(e.maxZ/4);z++){const k=x+','+z;if(!edgeCells.has(k))edgeCells.set(k,[]);edgeCells.get(k).push(e);}}
+export function clearSea(a,b){if(isLand(a.x,a.z)||isLand(b.x,b.z))return false;const minX=Math.min(a.x,b.x),maxX=Math.max(a.x,b.x),minZ=Math.min(a.z,b.z),maxZ=Math.max(a.z,b.z);const seen=new Set();const orient=(ax,az,bx,bz,cx,cz)=>(bx-ax)*(cz-az)-(bz-az)*(cx-ax);for(let x=Math.floor(minX/4);x<=Math.floor(maxX/4);x++)for(let z=Math.floor(minZ/4);z<=Math.floor(maxZ/4);z++)for(const e of edgeCells.get(x+','+z)||[]){if(seen.has(e.id))continue;seen.add(e.id);if(e.maxX<minX||e.minX>maxX||e.maxZ<minZ||e.minZ>maxZ)continue;const c=e.a,d=e.b;if(orient(a.x,a.z,b.x,b.z,...c)*orient(a.x,a.z,b.x,b.z,...d)<=0&&orient(...c,...d,a.x,a.z)*orient(...c,...d,b.x,b.z)<=0)return false;}return true;}
+export function seaPoint(x,z){if(!isLand(x,z))return{x,z};for(let r=.2;r<8;r+=.2)for(let a=0;a<Math.PI*2;a+=.2){const p={x:x+Math.cos(a)*r,z:z+Math.sin(a)*r};if(inBounds(p.x,p.z)&&!isLand(p.x,p.z))return p;}throw Error('No coastal arrival found');}
+// One-degree ocean grid; fine segment checks protect narrow coastlines.
+const cache=new Map();const key=(x,z)=>`${x},${z}`;function wet(x,z){const k=key(x,z);if(!cache.has(k))cache.set(k,inBounds(x,z)&&!isLand(x,z));return cache.get(k);}
+class Heap{items=[];push(v){let i=this.items.length;this.items.push(v);while(i){const p=(i-1)>>1;if(this.items[p].f<=v.f)break;this.items[i]=this.items[p];i=p;}this.items[i]=v;}pop(){const root=this.items[0],v=this.items.pop();if(this.items.length){let i=0;while(i*2+1<this.items.length){let c=i*2+1;if(c+1<this.items.length&&this.items[c+1].f<this.items[c].f)c++;if(this.items[c].f>=v.f)break;this.items[i]=this.items[c];i=c;}this.items[i]=v;}return root;}}
+function gridPoint(p){for(let r=0;r<=5;r++)for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){if(Math.max(Math.abs(dx),Math.abs(dz))!==r)continue;const q={x:Math.round(p.x)+dx,z:Math.round(p.z)+dz};if(wet(q.x,q.z)&&clearSea(p,q))return q;}return null;}
+function plan(start,end,step=1,region=null){if(!inBounds(end.x,end.z)||isLand(end.x,end.z))return null;if(clearSea(start,end))return[{...end}];const a=gridPoint(start),b=gridPoint(end);if(!a||!b)return null;const heap=new Heap(),best=new Map(),closed=new Set();const h=(x,z)=>Math.hypot(x-b.x,z-b.z);heap.push({...a,g:0,f:h(a.x,a.z),prev:null});best.set(key(a.x,a.z),0);let found=null;while(heap.items.length){const n=heap.pop(),k=key(n.x,n.z);if(closed.has(k))continue;closed.add(k);if(n.x===b.x&&n.z===b.z){found=n;break;}for(const [dx,dz]of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const x=Math.round((n.x+dx*step)*1000)/1000,z=Math.round((n.z+dz*step)*1000)/1000,nk=key(x,z),g=n.g+Math.hypot(dx,dz)*step;if(region&&(x<region[0]||x>region[1]||z<region[2]||z>region[3]))continue;if(closed.has(nk)||!wet(x,z)||g>=(best.get(nk)??Infinity)||!clearSea(n,{x,z}))continue;best.set(nk,g);heap.push({x,z,g,f:g+h(x,z),prev:n});}}if(!found)return null;const raw=[{...end}];for(let n=found;n;n=n.prev)raw.push({x:n.x,z:n.z});raw.reverse();const result=[];let anchor=start;for(let i=0;i<raw.length;){let j=raw.length-1;while(j>i&&!clearSea(anchor,raw[j]))j--;result.push(raw[j]);anchor=raw[j];i=j+1;}return result;}
+export function coordinates(x,z){return`${Math.abs(z).toFixed(1)}° ${z<=0?'N':'S'} ${Math.abs(x).toFixed(1)}° ${x>=0?'E':'W'}`;}
+export function oceanName(x,z){if(z< -60)return'Arctic Ocean';if(x>20&&x<120&&z> -25)return'Indian Ocean';if(x>120||x< -70)return'Pacific Ocean';if(x> -6&&x<37&&z< -29&&z> -47)return'Mediterranean Sea';return'Atlantic Ocean';}
+
+export function seaRoute(start,end){
+ if(!inBounds(end.x,end.z)||isLand(end.x,end.z))return null;
+ const marmara=p=>p.x>26.3&&p.x<30.5&&p.z< -40&&p.z> -41.5;
+ const a=marmara(start),b=marmara(end);
+ if(a!==b){const west={x:25,z:-39},inside=a?start:end;const tail=plan(DARDANELLES.at(-1),inside,.02,[24,31,-42,-38]);if(!tail)return null;const channel=[...DARDANELLES.slice(1),...tail];if(b){const first=plan(start,west);return first?[...first,...channel]:null;}const reversed=[west,...channel].reverse().slice(1),last=plan(west,end);return last?[...reversed,...last]:null;}
+ const europe=p=>p.x>=-20&&p.x<=12&&p.z>=-61&&p.z<=-30;if(europe(start)&&europe(end))return plan(start,end,.25,[-20,12,-61,-30])||plan(start,end);return plan(start,end);
+}
+
+export function nauticalMiles(a,b){const rad=Math.PI/180,lat1=-a.z*rad,lat2=-b.z*rad,dlat=lat2-lat1,dlon=(b.x-a.x)*rad;const h=Math.sin(dlat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dlon/2)**2;return 3440.065*2*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));}

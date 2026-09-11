@@ -1,0 +1,8 @@
+{
+  "version": "5.2.1 LTS",
+  "background": true,
+  "python_api": true,
+  "gltf_export": true,
+  "connection_mode": "local Blender command-line Python",
+  "live_ui_bridge": false
+}
