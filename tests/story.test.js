@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {newGame,loadGame,saveGame} from '../dist/state.js';
+import {advanceStory,restoreStory,conversation,conversationBranch,storyDestination,storyItems,repairCost,provisionRate} from '../dist/story.js';
+import {roomRoute,ROOM_BLOCKS,walkable} from '../dist/interiors.js';
+const storage=()=>({data:null,getItem(){return this.data},setItem(k,v){this.data=v}});
+for(const branch of ['crew','cargo'])test(`complete ${branch} ending survives each reload and rewards exactly once`,()=>{
+ let s=newGame();const db=storage();const base=s.gold;
+ const actions=[['accept','lisbon','compass'],['chart','london','charted'],[branch,'azores','return'],['finish','lisbon','complete']];
+ for(const[action,place,phase]of actions){assert.equal(advanceStory(s,action,place).ok,true);assert.equal(s.story.phase,phase);saveGame(db,s);s=loadGame(db);assert.equal(s.story.phase,phase);}
+ assert.equal(s.gold,base+(branch==='crew'?350:900));assert.equal(s.story.companion,branch==='crew'?'mara':'tomas');const snapshot=JSON.stringify(s);assert.equal(advanceStory(s,'finish','lisbon').ok,false);assert.equal(advanceStory(s,branch==='crew'?'cargo':'crew','azores').ok,false);assert.equal(JSON.stringify(s),snapshot);assert.equal(storyDestination(s),null);assert.ok(storyItems(s).includes('The Vale family compass'));
+});
+test('quest actions require both the correct chapter and place',()=>{const s=newGame(),initial=JSON.stringify(s);for(const[a,p]of[['finish','lisbon'],['chart','london'],['crew','azores'],['cargo','azores'],['accept','london']])assert.equal(advanceStory(s,a,p).ok,false);assert.equal(JSON.stringify(s),initial);advanceStory(s,'accept','lisbon');assert.equal(storyDestination(s),'london');assert.equal(advanceStory(s,'chart','lisbon').ok,false);});
+test('dialogue browsing, declining and reconsidering never commit a choice',()=>{const s=newGame();const before=JSON.stringify(s);assert.ok(conversation(s,'ines').choices.some(c=>c.close));conversationBranch(s,'ines','brother');assert.equal(JSON.stringify(s),before);advanceStory(s,'accept','lisbon');advanceStory(s,'chart','london');const snapshot=JSON.stringify(s);for(const branch of['crew','cargo'])assert.ok(conversationBranch(s,'tomas',branch).choices.some(c=>c.next==='start'));assert.equal(JSON.stringify(s),snapshot);});
+test('existing voyages gain a fresh story without losing trade progress',()=>{const db=storage(),s=newGame();delete s.story;s.gold=2345;s.quest=2;s.cargo.silk=3;saveGame(db,s);const loaded=loadGame(db);assert.equal(loaded.gold,2345);assert.equal(loaded.quest,2);assert.equal(loaded.cargo.silk,3);assert.equal(loaded.story.phase,'rumor');assert.deepEqual(restoreStory({phase:'complete',choice:'invalid'}),newGame().story);assert.equal(restoreStory({phase:'charted',companion:'mara'}).companion,null);});
+test('every story actor can be reached from the door around solid furniture',()=>{for(const[place,end]of[['lisbon',{x:-1.6,z:-.95}],['london',{x:-2,z:-.2}],['azores',{x:-.8,z:-.4}],['azores',{x:2,z:-1.2}]]){const path=roomRoute({x:0,z:3.6},end,ROOM_BLOCKS[place]);assert.ok(path?.length,place);for(const p of path)assert.ok(walkable(p.x,p.z,ROOM_BLOCKS[place]));}assert.equal(roomRoute({x:0,z:3.6},{x:0,z:-3.5},ROOM_BLOCKS.lisbon),null);assert.equal(walkable(8,0,[]),false);});
+
+test('companion perks affect the actual provision and repair calculations',()=>{const s=newGame();s.hull=60;assert.equal(repairCost(s),120);assert.equal(provisionRate(s),1);s.story.companion='mara';assert.equal(provisionRate(s),.8);assert.equal(repairCost(s),120);s.story.companion='tomas';assert.equal(repairCost(s),90);assert.equal(provisionRate(s),1);s.hull=100;assert.equal(repairCost(s),0);});
