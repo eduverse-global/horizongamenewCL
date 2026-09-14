@@ -2,13 +2,13 @@
 
 Working title: NARAI: Winds of Siam / นารายณ์: สายลมแห่งสยาม. Final name and availability are not settled.
 
-The main entry preserves the original sailing art. `/combat.html` is a standalone, bilingual Three.js tactical escort encounter. The earlier English sailing prototype remains at /voyage.html. These modes have separate saves. This is a mechanics experiment using procedural models, not the final Siam environment or campaign.
+The main entry preserves the original sailing art. `/combat.html` is a standalone, bilingual Three.js tactical escort encounter. The earlier sailing prototype remains at /voyage.html. These modes have separate saves. This is a mechanics experiment using procedural models, not the final Siam environment or campaign.
 
 ## Playable scope
 
 Assign exactly three teams between helm, guns and repairs. Queue up to two orders, inspect the exact turn forecast, undo, and commit. Movement is cardinal and avoids ships and shoals. Facing controls broadside arcs; northward movement receives a wind bonus. Rigging fire delays an opponent. Signals change the passenger route; anchoring resists the current. Mali can delay one enemy once. Win by reaching the northern exit or disabling both enemies; losing either friendly boat ends the battle.
 
-English and Thai cover this encounter's story briefing, instructions, controls, errors, event forecast and outcomes. Switching languages preserves orders. Reload preserves committed turns. Legacy sailing content is still English.
+English and Thai cover this encounter's story briefing, instructions, controls, errors, event forecast and outcomes. Switching languages preserves orders. Reload preserves committed turns. Sailing menus and the existing story now also have English/Thai presentation support.
 
 ## Validation and limits
 

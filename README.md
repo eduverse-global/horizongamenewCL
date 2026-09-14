@@ -12,7 +12,7 @@ An original, playable Three.js seafaring prototype inspired by the trading and e
 
 The `/combat.html` page opens a standalone river escort battle with English/Thai switching, two orders per turn, three crew teams, broadside and rigging fire, current drift, passenger signals, repairs, guarding, and Mali’s one-use parley. Review the forecast before committing. Progress saves as `narai-battle-v1`; language saves separately.
 
-This milestone uses simple procedural ships and terrain to test mechanics. The earlier sailing game remains at `/voyage.html`, in English, with its original save untouched. Regional journey pacing, Siam towns, a full bilingual campaign, and production art remain future milestones. See `docs/design/SIAM-FIRST-CHAPTER.md`.
+This milestone uses simple procedural ships and terrain to test mechanics. The sailing game remains the main entry, with `/voyage.html` as an alias and its original save format unchanged. Regional journey pacing, Siam towns, the new Narai-era campaign, and production art remain future milestones. See `docs/design/SIAM-FIRST-CHAPTER.md`.
 
 ## Earlier sailing prototype controls
 
@@ -53,3 +53,9 @@ License: https://www.naturalearthdata.com/about/terms-of-use/ (public domain).
 Simplified at 0.035 degrees; islands smaller than 0.035 square degrees omitted.
 
 Local Blender Python execution and GLB-export capability are verified. Run `npm run blender:check`. See `art/blender/README.md`. This is background authoring support, not a connection to the currently open Blender scene. No room or prop assets have been created or exported in this update.
+
+## English / Thai
+
+Use the EN / ไทย button in the sailing header, town header, or an open dialogue/panel. The choice persists under `narai-language` and is shared with the combat encounter. HUD, port trading/services, cargo, atlas city labels, settings, town controls, existing captain conversations and expedition text have Thai translations. Thai uses Noto Sans Thai with a system-font fallback. Source text remains English in saved logs so switching back does not rewrite voyage data.
+
+`dist/voyage-locale.js` localizes presentation at render boundaries and retains each node's original source for reversible switching. `dist/story-th.js` contains authored narrative translations. New English copy needs a corresponding dictionary entry or a structured translation pattern; unmatched strings remain English. Add new content with bilingual keys as the Narai campaign replaces the legacy story. Narrative branch coverage and dynamic numerical messages are checked by `tests/voyage-locale.test.js`.
