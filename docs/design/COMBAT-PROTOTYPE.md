@@ -2,7 +2,7 @@
 
 Working title: NARAI: Winds of Siam / นารายณ์: สายลมแห่งสยาม. Final name and availability are not settled.
 
-The root entry is a standalone, bilingual Three.js tactical escort encounter. The earlier English sailing prototype remains at /voyage.html. These modes have separate saves. This is a mechanics experiment using procedural models, not the final Siam environment or campaign.
+The main entry preserves the original sailing art. `/combat.html` is a standalone, bilingual Three.js tactical escort encounter. The earlier English sailing prototype remains at /voyage.html. These modes have separate saves. This is a mechanics experiment using procedural models, not the final Siam environment or campaign.
 
 ## Playable scope
 

@@ -10,7 +10,7 @@ An original, playable Three.js seafaring prototype inspired by the trading and e
 
 ## New bilingual tactical prototype
 
-The root page now opens a standalone river escort battle with English/Thai switching, two orders per turn, three crew teams, broadside and rigging fire, current drift, passenger signals, repairs, guarding, and Mali’s one-use parley. Review the forecast before committing. Progress saves as `narai-battle-v1`; language saves separately.
+The `/combat.html` page opens a standalone river escort battle with English/Thai switching, two orders per turn, three crew teams, broadside and rigging fire, current drift, passenger signals, repairs, guarding, and Mali’s one-use parley. Review the forecast before committing. Progress saves as `narai-battle-v1`; language saves separately.
 
 This milestone uses simple procedural ships and terrain to test mechanics. The earlier sailing game remains at `/voyage.html`, in English, with its original save untouched. Regional journey pacing, Siam towns, a full bilingual campaign, and production art remain future milestones. See `docs/design/SIAM-FIRST-CHAPTER.md`.
 
