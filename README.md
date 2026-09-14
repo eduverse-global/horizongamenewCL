@@ -1,4 +1,4 @@
-# Horizon — Tides of Fortune
+# NARAI: Winds of Siam — นารายณ์: สายลมแห่งสยาม (working title)
 
 An original, playable Three.js seafaring prototype inspired by the trading and exploration of Uncharted Waters: New Horizons and the miniature-world presentation of HD-2D RPGs. This is a vertical slice, not a finished AAA game or a recreation of copyrighted assets.
 
@@ -8,7 +8,13 @@ An original, playable Three.js seafaring prototype inspired by the trading and e
 
 `npm test` verifies the trading economy, commission progression, capacity limits, and safe save restoration. `npm run build` checks the authored JavaScript. The complete self-contained game is in `dist/`; serve it with any static web server. Google Fonts is optional and falls back to system fonts.
 
-## Play
+## New bilingual tactical prototype
+
+The root page now opens a standalone river escort battle with English/Thai switching, two orders per turn, three crew teams, broadside and rigging fire, current drift, passenger signals, repairs, guarding, and Mali’s one-use parley. Review the forecast before committing. Progress saves as `narai-battle-v1`; language saves separately.
+
+This milestone uses simple procedural ships and terrain to test mechanics. The earlier sailing game remains at `/voyage.html`, in English, with its original save untouched. Regional journey pacing, Siam towns, a full bilingual campaign, and production art remain future milestones. See `docs/design/SIAM-FIRST-CHAPTER.md`.
+
+## Earlier sailing prototype controls
 
 - Click open water or a harbor marker to plot a course. Navigate around islands; auto-navigation plots ocean routes around continents.
 - W raises full sail, S lowers sail, A/D steer. Steering cancels a plotted course.
