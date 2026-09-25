@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node server.mjs",
-    "build": "node --check dist/game.js && node --check dist/world.js && node --check dist/state.js && node --check dist/geography.js && node --check dist/story.js && node --check dist/interiors.js && node --check dist/story-view.js && node --check dist/places.js && node --check dist/towns.js && node --check dist/expedition.js && node --check dist/narai/battle.js && node --check dist/narai/i18n.js && node --check dist/narai/scene.js && node --check dist/narai/app.js && node --check dist/voyage-locale.js && node --check dist/story-th.js && node --check dist/travel.js && node --check dist/engine/courtyard.js && node --check dist/engine/runtime.js && node --check dist/engine/actors.js && node --check dist/engine/courtyard-state.js && node --check dist/engine/courtyard-scene.js",
+    "build": "node --check dist/game.js && node --check dist/world.js && node --check dist/state.js && node --check dist/geography.js && node --check dist/story.js && node --check dist/interiors.js && node --check dist/story-view.js && node --check dist/places.js && node --check dist/towns.js && node --check dist/expedition.js && node --check dist/narai/battle.js && node --check dist/narai/i18n.js && node --check dist/narai/scene.js && node --check dist/narai/app.js && node --check dist/voyage-locale.js && node --check dist/story-th.js && node --check dist/travel.js && node --check dist/engine/courtyard.js && node --check dist/engine/runtime.js && node --check dist/engine/actors.js && node --check dist/engine/courtyard-state.js && node --check dist/engine/courtyard-scene.js && node --check dist/data/narai-story.js",
     "test": "node --test tests/*.test.js",
     "blender:check": "node scripts/blender.mjs"
   },
