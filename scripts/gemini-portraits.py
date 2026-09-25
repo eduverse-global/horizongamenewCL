@@ -4,7 +4,9 @@ Each request sends two references: the character's PixelLab sprite (identity, co
 and the existing Mara portrait (painting style and framing). Results go to art/portraits/raw/,
 and a 4-cell atlas (captain, official, merchant, innkeeper) to dist/assets/siam-portraits.jpg.
 
-Usage: GEMINI_API_KEY=... python scripts/gemini-portraits.py [id ...]   (needs Pillow)
+Usage: python scripts/gemini-portraits.py [id ...]   (needs Pillow)
+Auth: GEMINI_API_KEY if set; otherwise no key is sent and the session proxy is expected to add a
+credential stored for generativelanguage.googleapis.com (API key or GCP service account).
 Optional: GEMINI_IMAGE_MODEL (default gemini-2.5-flash-image). Existing raw portraits are kept
 unless their id is named on the command line.
 """
@@ -50,7 +52,7 @@ def generate(key, sprite, description, style):
         {'inline_data': {'mime_type': 'image/png', 'data': png_b64(style)}}]}],
         'generationConfig': {'responseModalities': ['IMAGE']}}
     req = urllib.request.Request(f'https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent',
-                                 data=json.dumps(body).encode(), headers={'Content-Type': 'application/json', 'x-goog-api-key': key})
+                                 data=json.dumps(body).encode(), headers={'Content-Type': 'application/json', **({'x-goog-api-key': key} if key else {})})
     with urllib.request.urlopen(req, timeout=300) as r: reply = json.load(r)
     for part in reply.get('candidates', [{}])[0].get('content', {}).get('parts', []):
         data = part.get('inlineData') or part.get('inline_data')
@@ -64,7 +66,6 @@ def square(img, size=512):
 if __name__ == '__main__':
     key = os.environ.get('GEMINI_API_KEY')
     wanted = sys.argv[1:] or [c for c in CAST if not (raw / f'{c}.png').exists()]
-    if wanted and not key: sys.exit('Set GEMINI_API_KEY to generate: ' + ', '.join(wanted))
     style = style_reference()
     for cid in wanted:
         generate(key, *CAST[cid], style).save(raw / f'{cid}.png'); print('generated', cid)
