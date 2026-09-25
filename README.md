@@ -59,3 +59,7 @@ Local Blender Python execution and GLB-export capability are verified. Run `npm 
 Use the EN / ไทย button in the sailing header, town header, or an open dialogue/panel. The choice persists under `narai-language` and is shared with the combat encounter. HUD, port trading/services, cargo, atlas city labels, settings, town controls, existing captain conversations and expedition text have Thai translations. Thai uses Noto Sans Thai with a system-font fallback. Source text remains English in saved logs so switching back does not rewrite voyage data.
 
 `dist/voyage-locale.js` localizes presentation at render boundaries and retains each node's original source for reversible switching. `dist/story-th.js` contains authored narrative translations. New English copy needs a corresponding dictionary entry or a structured translation pattern; unmatched strings remain English. Add new content with bilingual keys as the Narai campaign replaces the legacy story. Narrative branch coverage and dynamic numerical messages are checked by `tests/voyage-locale.test.js`.
+
+## HD-2D courtyard benchmark
+
+Open `/courtyard.html` after `npm run dev` to try the new standalone Siam courtyard: Blender pavilion, four-direction exploration, EN/TH portrait dialogue, daylight/evening presets and a practice-strike effect. The original sailing game remains at `/`. See [benchmark notes](docs/engine/COURTYARD.md) for scope and the asset rebuild command.

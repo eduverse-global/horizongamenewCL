@@ -40,3 +40,16 @@ html[lang="th"] .quest .text-btn{margin-top:15px;padding-top:14px}
 @media(max-width:760px){html[lang="th"] .quest{max-height:260px}html[lang="th"] .quest h2{font-size:20px}}
 @media(max-height:620px) and (min-width:761px){html[lang="th"] .quest{max-height:190px}}
 .in-room > a[href="/combat.html"]{display:none}
+/* Compact route status stays above the existing sailing controls. */
+#destination-status{bottom:174px;left:50%;width:min(500px,42vw);padding:10px 14px;background:#12353aeF;border:1px solid #bca57566;border-radius:4px;text-align:center;text-shadow:none;z-index:4;font-size:12px;white-space:normal}
+#destination-status[hidden]{display:none}
+#route-label{color:#f0dfb7;font-weight:600}
+#route-estimate{font-size:11px;color:#bbd0c8;margin:5px 0}
+#route-warning{color:#f1c08d;font-size:11px;margin:5px 0}
+.voyage-buttons{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.voyage-buttons button{padding:5px 9px;font-size:11px;border:1px solid #bca57555;background:transparent;color:#e9d9b5;border-radius:3px}
+.voyage-buttons button.selected{background:#c4ab75;color:#163134}
+.voyage-buttons button:disabled{opacity:.4;cursor:default}
+@media(max-width:760px){#destination-status{bottom:218px;left:auto;right:15px;transform:none;width:min(250px,calc(100vw - 225px));padding:8px;font-size:11px}#route-estimate{font-size:10px}.voyage-buttons button{font-size:10px;padding:4px 6px}}
+@media(max-width:480px){#destination-status{bottom:218px;left:15px;right:15px;transform:none;width:auto}.quest:has(~ #destination-status:not([hidden])){max-height:160px;overflow:auto}.location:has(~ #destination-status){display:none}}
+@media(max-width:760px){#destination-status{bottom:calc(50px + var(--sailing-footer-height,290px));left:15px;right:15px;transform:none;width:auto}.has-course .map-wrap,.has-course .location,.has-course .touch-controls{display:none}.has-course .quest{max-height:160px;overflow:auto}}

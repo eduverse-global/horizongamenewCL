@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {fresh,restore,move,walkable,inside,route,act,POINTS} from '../dist/engine/courtyard-state.js';
+test('cardinal input never moves diagonally; long frames are clamped',()=>{const s=fresh();move(s,1,1,3);assert.equal(s.x,0);assert.ok(s.z>6.5&&s.z<=6.66);});
+test('walls block travel while the doorway connects courtyard to interior',()=>{assert.equal(walkable(-3.2,-4),false);assert.equal(walkable(0,-4),true);assert.equal(inside({x:0,z:-5}),true);assert.ok(route(fresh(),{x:-2,z:-5.1}).length>0);});
+test('every interaction can be approached from spawn without crossing solids',()=>{for(const p of POINTS){const path=route(fresh(),{x:p.x,z:p.z+.95});assert.ok(path.length,p.id);for(const point of path)assert.ok(walkable(point.x,point.z),p.id);}});
+test('quest requires proximity and sequence, preserves both endings',()=>{for(const choice of ['share','keep']){const s=fresh();assert.equal(act(s,'mara'),false);Object.assign(s,{x:-3.5,z:3});assert.equal(act(s,'mara'),true);assert.equal(act(s,'mara',choice),false);Object.assign(s,{x:-2,z:-5.1});assert.equal(act(s,'ledger'),true);Object.assign(s,{x:-3.5,z:3});assert.equal(act(s,'mara',choice),true);assert.equal(act(s,'mara',choice),false);assert.equal(restore(s).choice,choice);assert.equal(restore(s).quest,'complete');}});
+test('bad save cannot place captain outside world or skip quest',()=>{const s=restore({x:Infinity,quest:'invalid'});assert.deepEqual(s,fresh());});
