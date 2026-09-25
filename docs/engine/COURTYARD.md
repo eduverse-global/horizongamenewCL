@@ -23,7 +23,7 @@ The sailing game remains the root page. Its courtyard link opens this independen
 
 ## Siam cast (PixelLab)
 - The player is the Thai captain from the Horinzonnext art test. Khun Phithak Wari (Krom Tha official) gives the ledger quest in Mara's place. Tan Heng (junk merchant) and Mae Im (river lodge) greet, then cycle their Horinzonnext lines from `dist/data/narai-story.js`.
-- Art: `dist/assets/siam-cast.png`, rebuilt from `art/pixellab/` (see its README). Each character has one drawn frame per facing, so walking uses a short step bob until walk cycles are exported. Dialogue portraits are the sprites enlarged with pixelated scaling.
+- Art: `dist/assets/siam-cast.png`, rebuilt from `art/pixellab/` (see its README). Each character has one drawn frame per facing, so walking uses a short step bob until walk cycles are exported. Dialogue portraits are painted Gemini portraits (`dist/assets/siam-portraits.jpg`, see `art/portraits/README.md`).
 - Saves keep the same `narai-courtyard-v1` format; only the quest giver's id changed.
 
 ## Scope

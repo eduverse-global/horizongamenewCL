@@ -15,10 +15,10 @@ function notice(text){$('notice').textContent=text;clearTimeout(noticeTimer);not
 function save(){try{localStorage.setItem(saveKey,JSON.stringify({quest:s.quest,choice:s.choice}));}catch{notice(lang==='th'?'ไม่สามารถบันทึกในเบราว์เซอร์นี้ได้':'Browser storage is unavailable.');}}
 function labels(){document.documentElement.lang=lang;$('title').textContent=t('title');$('voyage').textContent=t('sea');$('language').textContent=lang==='en'?'ไทย':'EN';$('time').textContent=t(evening?'night':'day');$('quality').textContent=t(runtime?.enhanced?'quality':'basic');$('controls').textContent=t('controls');$('attack').textContent=t('attack');$('stats-label').textContent=t('stats');$('objective').textContent=t(s.quest==='ledger'?'ledgerQuest':s.quest);for(const[id,b]of markerButtons)b.textContent=t(id);if(activeDialogue)showDialogue(activeDialogue);}
 function close(){dialog.close();activeDialogue=null;keys.clear();canvas.focus({preventScroll:true});}
-// Speakers map to the Horinzonnext quay cast and to their column in the PixelLab atlas.
-const CAST={official:['harbour_official',4,'KROM THA · ROYAL LANDING','กรมท่า · ท่าเรือหลวง'],merchant:['junk_merchant',5,'JUNK MERCHANT','พ่อค้าสำเภา'],innkeeper:['innkeeper',6,'RIVER LODGE','เรือนพักริมน้ำ']};
+// Speakers map to the Horinzonnext quay cast and to their cell in the Gemini portrait atlas (captain is cell 0).
+const CAST={official:['harbour_official',1,'KROM THA · ROYAL LANDING','กรมท่า · ท่าเรือหลวง'],merchant:['junk_merchant',2,'JUNK MERCHANT','พ่อค้าสำเภา'],innkeeper:['innkeeper',3,'RIVER LODGE','เรือนพักริมน้ำ']};
 const visits={};
-function portrait(column){const el=$('portrait'),w=el.clientWidth||210,scale=w/34;el.style.backgroundSize=`${7*48*scale}px ${48*scale}px`;el.style.backgroundPosition=`${-(column*48+7)*scale}px ${-1*scale}px`;}
+function portrait(cell){const el=$('portrait'),w=el.clientWidth||210,h=el.clientHeight||250,size=Math.max(w,h);el.style.backgroundSize=`${4*size}px ${size}px`;el.style.backgroundPosition=`${-(cell*size+(size-w)/2)}px 0px`;}
 function showDialogue(id){const first=activeDialogue!==id;activeDialogue=id;keys.clear();path=[];pending=null;const cast=CAST[id];$('portrait').hidden=!cast;$('role').textContent=cast?cast[lang==='th'?3:2]:'NARAI';$('speaker').textContent=cast?say(QUAY_CAST[cast[0]].name,lang):t(id);
  const key=id==='official'&&s.quest==='complete'?'officialDone':id;if(cast&&first)visits[key]=(visits[key]??-1)+1;
  let text=id==='gate'?'gated':id==='ledger'?'read':s.quest==='meet'?'hello':s.quest==='ledger'?'waiting':s.quest==='return'?'choice':s.choice==='share'?'shared':'kept';
