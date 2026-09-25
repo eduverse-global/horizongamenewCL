@@ -21,8 +21,13 @@ The sailing game remains the root page. Its courtyard link opens this independen
 - Static props are merged into one draw per material (`flush()` in `courtyard-scene.js`). Draw calls went from 536 to 107 in the courtyard and 79 inside, measured in headless Chromium (SwiftShader), where frame rate is not representative.
 - Grass blades have upward normals on both faces, so they are lit like the ground instead of rendering as dark spikes.
 
+## Siam cast (PixelLab)
+- The player is the Thai captain from the Horinzonnext art test. Khun Phithak Wari (Krom Tha official) gives the ledger quest in Mara's place. Tan Heng (junk merchant) and Mae Im (river lodge) greet, then cycle their Horinzonnext lines from `dist/data/narai-story.js`.
+- Art: `dist/assets/siam-cast.png`, rebuilt from `art/pixellab/` (see its README). Each character has one drawn frame per facing, so walking uses a short step bob until walk cycles are exported. Dialogue portraits are the sprites enlarged with pixelated scaling.
+- Saves keep the same `narai-courtyard-v1` format; only the quest giver's id changed.
+
 ## Scope
-This is an original stylized visual prototype, not a historical reconstruction or a finished AAA art pass. Existing European captain/Mara art is reused to test rendering and animation, pending a dedicated Siam cast. The pilgrim gate introduces a future destination; it does not load another region. The practice effect is not yet connected to the tactical combat system. Camera framing, architecture and vegetation still need art iteration. Performance numbers must be measured on target devices; 60 fps is not a delivery guarantee.
+This is an original stylized visual prototype, not a historical reconstruction or a finished AAA art pass. The pilgrim gate introduces a future destination; it does not load another region. The practice effect is not yet connected to the tactical combat system. Camera framing, architecture and vegetation still need art iteration. Performance numbers must be measured on target devices; 60 fps is not a delivery guarantee.
 
 ## Rebuild model
 `node scripts/blender.mjs art/blender/courtyard/author.py`

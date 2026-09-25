@@ -1,7 +1,9 @@
 // Metres, Y up, Z south. Simulation has no dependency on Three.js or the DOM.
 export const START={x:0,z:6.5,facing:'up'};
 export const POINTS=[
- {id:'mara',x:-3.5,z:2.1},
+ {id:'official',x:-3.5,z:2.1},
+ {id:'merchant',x:-5.2,z:4.4},
+ {id:'innkeeper',x:8.3,z:4.8},
  {id:'ledger',x:-2,z:-6.0},
  {id:'training',x:5.5,z:4.5},
  {id:'gate',x:-10,z:-3.0}
@@ -10,7 +12,7 @@ export const POINTS=[
 export const BLOCKS=[
  [-3.22,-4,3.55,.28],[3.22,-4,3.55,.28],[0,-10,10,.3],[-5,-7,.3,6],[5,-7,.3,6],
  [-2,-7.9,2.5,1.4],[2.95,-9.55,2.7,.8],[-3.5,2.1,.5,.5],[5.5,4.5,.6,.6],
- [-7,6,2,1.4],[-8,-7,3,2]
+ [-7,6,2,1.4],[-8,-7,3,2],[-5.2,4.4,.5,.5],[8.3,4.8,.5,.5]
 ];
 export const inside=p=>p.z< -3.75&&p.z> -9.8&&Math.abs(p.x)<4.8;
 export function walkable(x,z){return x>-11.6&&x<9.7&&z>-10.6&&z<10.8&&!BLOCKS.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2+.26&&Math.abs(z-bz)<d/2+.26);}
@@ -29,9 +31,9 @@ export function move(s,dx,dz,dt){
 export function nearest(s){return POINTS.map(p=>({...p,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
 export function act(s,id,choice){
  const p=POINTS.find(p=>p.id===id);if(!p||Math.hypot(p.x-s.x,p.z-s.z)>1.85)return false;
- if(id==='mara'&&s.quest==='meet'){s.quest='ledger';return true;}
+ if(id==='official'&&s.quest==='meet'){s.quest='ledger';return true;}
  if(id==='ledger'&&s.quest==='ledger'){s.quest='return';return true;}
- if(id==='mara'&&s.quest==='return'&&['share','keep'].includes(choice)){s.quest='complete';s.choice=choice;return true;}
+ if(id==='official'&&s.quest==='return'&&['share','keep'].includes(choice)){s.quest='complete';s.choice=choice;return true;}
  return false;
 }
 // Grid routing ensures pointer travel follows the same cardinal movement/collision rules.
