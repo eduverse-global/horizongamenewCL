@@ -31,7 +31,7 @@ CAST = {
                  'dignified, courteous and shrewd.'),
     'merchant': ('merchant-south', 'Tan Heng, a plump, good-humoured Chinese junk merchant: dark blue-grey long robe, black skullcap, '
                  'moustache, an abacus at his belt; a trader\'s knowing smile.'),
-    'innkeeper': ('innkeeper-south', 'Mae Im, a warm middle-aged Siamese woman who keeps a riverside lodge: short cropped hair, green '
+    'innkeeper': ('innkeeper-south', 'Mae Im, a young Siamese woman in her early twenties who keeps a riverside lodge: youthful face, bright eyes, short cropped hair, green '
                   'pha sabai breast cloth draped over one shoulder, a jasmine garland in her hand; a kind, teasing smile.'),
 }
 

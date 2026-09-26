@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {createRuntime} from './runtime.js';
 import {createCourtyard} from './courtyard-scene.js';
 import {createActors} from './actors.js';
-import {fresh,restore,move,nearest,act,route,POINTS} from './courtyard-state.js';
+import {fresh,restore,move,nearest,act,route,POINTS,approachRoute,faceToward} from './courtyard-state.js';
 import {QUAY_CAST,quayLine,text as say} from '../data/narai-story.js';
 const $=id=>document.getElementById(id),keys=new Set(),saveKey='narai-courtyard-v1';
 let lang='en',s=fresh();try{lang=localStorage.getItem('narai-language')==='th'?'th':'en';s=restore(JSON.parse(localStorage.getItem(saveKey)));}catch{}
@@ -37,7 +37,7 @@ function strike(){if(dialog.open||attackAge<.65)return;const p=POINTS.find(p=>p.
  // Audio begins only on user interaction and remains a short, quiet impact cue.
  try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.type='triangle';osc.frequency.setValueAtTime(220,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(65,audio.currentTime+.13);gain.gain.setValueAtTime(.08,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.16);osc.connect(gain).connect(audio.destination);osc.start();osc.stop(audio.currentTime+.17);}catch{}
 }
-function approach(p){if(dialog.open)return;keys.clear();path=route(s,{x:p.x,z:p.z+.95});pending=p.id;}
+function approach(p){if(dialog.open)return;keys.clear();path=approachRoute(s,p,!!CAST[p.id]);pending=p.id;}
 $('language').onclick=()=>{lang=lang==='en'?'th':'en';try{localStorage.setItem('narai-language',lang);}catch{}labels();};
 $('time').onclick=()=>{evening=!evening;world?.setEvening(evening);labels();};$('quality').onclick=()=>{runtime?.setQuality(!runtime.enhanced);labels();};$('interact').onclick=interact;$('attack').onclick=strike;$('reload').onclick=()=>location.reload();
 function blocked(){return dialog.open||!world;}
@@ -57,11 +57,12 @@ try{
  runtime.camera.position.set(0,16*LENS,23*LENS);runtime.camera.lookAt(0,0,0);$('loading').hidden=true;labels();canvas.focus();
  let previous=performance.now(),accumulator=0;const center=new THREE.Vector3(0,0,0),desired=new THREE.Vector3(),projected=new THREE.Vector3();
  function frame(now){raf=requestAnimationFrame(frame);const dt=Math.min((now-previous)/1000,.05);previous=now;if(document.hidden)return;time+=dt;attackAge+=dt;let moving=false;
- if(!blocked()){accumulator+=dt;while(accumulator>=1/60){accumulator-=1/60;let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dz=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
- if(dx||dz){path=[];pending=null;}else if(path.length){const p=path[0];const x=p.x-s.x,z=p.z-s.z;if(Math.hypot(x,z)<.06)path.shift();else{dx=x;dz=z;}}
- moving=move(s,dx,dz,1/60)||moving;
- if(!path.length&&pending){const p=POINTS.find(p=>p.id===pending);pending=null;if(Math.hypot(p.x-s.x,p.z-s.z)<1.85){if(p.id==='training')strike();else showDialogue(p.id);}}
- }}else accumulator=0;
+ if(!blocked()){const steps=Math.max(1,Math.ceil(dt*60)),h=dt/steps;for(let i=0;i<steps;i++){let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dz=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
+ // Reached waypoints are dropped in the same step, so the captain never pauses (or re-accelerates) between them.
+ if(dx||dz){path=[];pending=null;}else{while(path.length&&Math.hypot(path[0].x-s.x,path[0].z-s.z)<.06)path.shift();if(path.length){dx=path[0].x-s.x;dz=path[0].z-s.z;}}
+ moving=move(s,dx,dz,h)||moving;
+ if(!path.length&&pending){const p=POINTS.find(p=>p.id===pending);pending=null;if(Math.hypot(p.x-s.x,p.z-s.z)<1.85){if(p.id==='training')strike();else{if(CAST[p.id])faceToward(s,p);showDialogue(p.id);}}}
+ }}
  // Wide diorama view by default (the whole courtyard, as in the original); wheel or +/- zooms toward a close follow view.
  const lerp=THREE.MathUtils.lerp,clamp=THREE.MathUtils.clamp;
  desired.set(lerp(clamp(s.x*.45,-3.8,3.8),clamp(s.x*.85,-6.5,6.5),zoom),0,lerp(clamp(s.z*.42,-4.5,2.7),clamp(s.z*.5-1.5,-7.2,3),zoom));center.lerp(desired,reduced?1:1-Math.exp(-dt*3.5));const distance=lerp(s.room?18:23,s.room?9.5:12.5,zoom)*LENS;
@@ -70,7 +71,7 @@ try{
  const power=attackAge<.65?Math.sin(attackAge/.65*Math.PI):0;effect.material.opacity=power;effect.rotation.z=-attackAge*9;effect.scale.setScalar(.7+Math.min(attackAge,1)*1.5);flash.intensity=power*45;sparks.material.opacity=power;
  const positions=sparks.geometry.attributes.position;for(let i=0;i<32;i++){const a=i*2.4,r=attackAge<1?attackAge*2.6:0;positions.setXYZ(i,5.5+Math.cos(a)*r,1.4+Math.sin(a)*r-attackAge*attackAge,4.7+Math.sin(i)*r*.4);}positions.needsUpdate=true;
  const n=nearest(s);$('interact').textContent=n.distance<1.85?`${t(n.id)} · E`:t('interact');
- for(const p of POINTS){const b=markerButtons.get(p.id);const visible=p.id==='ledger'?s.room:!s.room;b.hidden=!visible;if(visible){projected.set(p.x,p.id==='ledger'?1.4:2.05,p.z).project(runtime.camera);b.style.left=`${(projected.x*.5+.5)*innerWidth}px`;b.style.top=`${(-projected.y*.5+.5)*innerHeight}px`;b.hidden=projected.z>1||Math.abs(projected.x)>.95||projected.y>.68||projected.y<-.83;b.classList.toggle('active',n.id===p.id&&n.distance<1.85);}}
+ for(const p of POINTS){const b=markerButtons.get(p.id);const visible=p.id==='ledger'?s.room:!s.room;b.hidden=!visible;if(visible){projected.set(p.x,p.id==='ledger'?1.4:CAST[p.id]?2.95:2.05,p.z).project(runtime.camera);b.style.left=`${(projected.x*.5+.5)*innerWidth}px`;b.style.top=`${(-projected.y*.5+.5)*innerHeight}px`;const near=n.id===p.id&&n.distance<1.85;b.hidden=projected.z>1||Math.abs(projected.x)>.95||projected.y>.68||projected.y<-.83||(near&&!!CAST[p.id]);b.classList.toggle('active',near);}}
  runtime.renderer.info.autoReset=false;runtime.renderer.info.reset();runtime.render({x:s.x,y:1,z:s.z});frames++;elapsed+=dt;
  if(elapsed>=1){fps=Math.round(frames/elapsed);frames=elapsed=0;$('stats').textContent=`${fps} fps · ${runtime.renderer.info.render.calls} draws\n${Math.round(runtime.renderer.info.render.triangles/1000)}k triangles\n${runtime.renderer.info.memory.textures} textures`;}
  }

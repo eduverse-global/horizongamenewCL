@@ -6,3 +6,5 @@ Painted portraits generated with the Gemini API (`gemini-3-pro-image`), Septembe
 - `dist/assets/siam-portraits.jpg`: 512 px cells in that order, used by the courtyard dialogue box.
 
 Regenerate one: `python scripts/gemini-portraits.py merchant` (needs Pillow and a Gemini credential, either a `GEMINI_API_KEY` variable or one the session proxy adds for `generativelanguage.googleapis.com`).
+
+Mae Im's portrait was regenerated after playtest feedback to show her as a young woman in her early twenties.

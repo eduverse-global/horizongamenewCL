@@ -11,8 +11,8 @@ export const POINTS=[
 // Architectural solids; the pavilion doorway is the gap x=-1.4..1.4.
 export const BLOCKS=[
  [-3.22,-4,3.55,.28],[3.22,-4,3.55,.28],[0,-10,10,.3],[-5,-7,.3,6],[5,-7,.3,6],
- [-2,-7.9,2.5,1.4],[2.95,-9.55,2.7,.8],[-3.5,2.1,.5,.5],[5.5,4.5,.6,.6],
- [-7,6,2,1.4],[-8,-7,3,2],[-5.4,-.4,.5,.5],[6.6,.4,.5,.5]
+ [-2,-7.9,2.5,1.4],[2.95,-9.55,2.7,.8],[-3.5,2.1,1,.6],[5.5,4.5,.6,.6],
+ [-7,6,2,1.4],[-8,-7,3,2],[-5.4,-.4,1,.6],[6.6,.4,1,.6]
 ];
 export const inside=p=>p.z< -3.75&&p.z> -9.8&&Math.abs(p.x)<4.8;
 export function walkable(x,z){return x>-11.6&&x<9.7&&z>-10.6&&z<10.8&&!BLOCKS.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2+.26&&Math.abs(z-bz)<d/2+.26);}
@@ -21,13 +21,22 @@ export function restore(value){const s=fresh();if(value&&['meet','ledger','retur
 // Free 8-way movement (as in HD-2D towns): diagonals are normalised, walls are slid along, and speed
 // eases in over ~80 ms. Facing follows the dominant axis, keeping the current one on exact diagonals.
 export const SPEED=3.4;
+// Where the captain stands to talk: beside a character (nearer side first, as in HD-2D towns, so the sprites
+// never overlap on screen), or in front of objects. Returns the first reachable spot, or [] if none.
+export const APPROACH=1.25,SIDE=1.3;
+export function approachRoute(s,p,isPerson){
+ const sides=isPerson?(s.x<p.x?[-SIDE,SIDE]:[SIDE,-SIDE]).map(dx=>({x:p.x+dx,z:p.z+.15})):[];
+ for(const spot of[...sides,{x:p.x,z:p.z+APPROACH}]){const r=route(s,spot);if(r.length)return r;}
+ return [];
+}
+export function faceToward(s,p){const dx=p.x-s.x,dz=p.z-s.z;s.facing=Math.abs(dx)>Math.abs(dz)?(dx<0?'left':'right'):(dz<0?'up':'down');}
 export function move(s,dx,dz,dt){
  if(!Number.isFinite(dt)||dt<=0)return false;
  dt=Math.min(dt,.05);const len=Math.hypot(dx,dz);
  if(!len){s.v=0;return false;}
  dx/=len;dz/=len;s.v=Math.min(1,(s.v||0)+dt/.08);
  const ax=Math.abs(dx),az=Math.abs(dz),vertical=s.facing==='up'||s.facing==='down';
- if(az>ax+.01||(Math.abs(ax-az)<=.01&&vertical))s.facing=dz<0?'up':'down';else s.facing=dx<0?'left':'right';
+ if(vertical?az>=ax*.77:az>ax*1.3)s.facing=dz<0?'up':'down';else s.facing=dx<0?'left':'right';
  const step=dt*SPEED*s.v;
  for(const[mx,mz]of[[dx,dz],[dx,0],[0,dz]]){if(!mx&&!mz)continue;const x=s.x+mx*step,z=s.z+mz*step;if(walkable(x,z)){s.x=x;s.z=z;s.room=inside(s);return true;}}
  return false;
@@ -49,5 +58,11 @@ export function route(start,end){
   const [x,z]=q[i];if(x===ex&&z===ez){found=[x,z];break;}
   for(const[dx,dz]of[[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]){const nx=x+dx,nz=z+dz,k=key(nx,nz);if(seen.has(k)||!walkable(nx*unit,nz*unit))continue;if(dx&&dz&&!(walkable((x+dx)*unit,z*unit)&&walkable(x*unit,(z+dz)*unit)))continue;seen.set(k,[x,z]);q.push([nx,nz]);}
  }
- if(!found)return [];const points=[];while(found){points.push({x:found[0]*unit,z:found[1]*unit});found=seen.get(key(...found));}return points.reverse();
+ if(!found)return [];const points=[];while(found){points.push({x:found[0]*unit,z:found[1]*unit});found=seen.get(key(...found));}points.reverse();
+ return smooth(points);
 }
+// A straight segment is clear when samples every 5 cm along it are walkable.
+function clear(a,b){const n=Math.ceil(Math.hypot(b.x-a.x,b.z-a.z)/.05);for(let i=1;i<=n;i++){const t=i/n;if(!walkable(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t))return false;}return true;}
+function smooth(points){if(points.length<3)return points;const out=[points[0]];let i=0;
+ while(i<points.length-1){let j=points.length-1;while(j>i+1&&!clear(points[i],points[j]))j--;out.push(points[j]);i=j;}
+ return out;}
