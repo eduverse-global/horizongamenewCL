@@ -14,7 +14,7 @@
  "walk": {
   "south": {
    "row": 1,
-   "frames": 0
+   "frames": 6
   },
   "west": {
    "row": 2,
