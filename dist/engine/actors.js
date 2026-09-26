@@ -6,6 +6,9 @@ import {POINTS,SPEED,DASH,onLanding,faceToward} from './courtyard-state.js';
 const FACING={down:'south',left:'west',right:'east',up:'north','down-right':'south-east','up-right':'north-east','up-left':'north-west','down-left':'south-west'},NPC=['official','merchant','innkeeper'],SIZE=2.1;
 // One full walk cycle (both steps) per 2 m walked: about 10 frames a second at walking speed, and the feet do not slide.
 const CYCLE=2;
+// Breathing only where PixelLab's breathing frames match the standing sprite's size: Khun Phithak Wari's and Tan Heng's
+// were redrawn 3-4 px shorter, which made them look shrunken, so they keep their standing frame.
+const BREATHES=new Set(['innkeeper']);
 export async function createActors(scene){
  const [atlas,layout]=await Promise.all([new THREE.TextureLoader().loadAsync('/assets/siam-cast.png'),fetch('/assets/siam-cast.json').then(r=>r.json())]);
  atlas.colorSpace=THREE.SRGBColorSpace;atlas.magFilter=THREE.NearestFilter;atlas.minFilter=THREE.NearestFilter;atlas.generateMipmaps=false;
@@ -28,7 +31,7 @@ export async function createActors(scene){
  function faceCaptain(id,s){const n=npcs.find(n=>n.id===id);if(!n)return;const probe={x:n.x,z:n.z,facing:n.facing};faceToward(probe,s);n.facing=probe.facing;n.until=Infinity;}
  function release(id){const n=npcs.find(n=>n.id===id);if(n&&n.until===Infinity)n.until=clock+1.2;}
  function update(s,moving,time,camera,dt=1/60){clock=time;
- for(const n of npcs){if(n.facing!=='down'&&time>n.until)n.facing='down';const breathe=layout.anim?.[n.id+'-breathe'];
+ for(const n of npcs){if(n.facing!=='down'&&time>n.until)n.facing='down';const breathe=BREATHES.has(n.id)&&layout.anim?.[n.id+'-breathe'];
   if(n.facing==='down'&&breathe?.frames)cell(n.texture,Math.floor((time/.3+n.phase*breathe.frames))%breathe.frames,breathe.row);else cell(n.texture,column(n.id+'-'+FACING[n.facing]),0);}
  const walk=layout.walk[FACING[s.facing]];
  if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}

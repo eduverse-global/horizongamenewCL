@@ -30,3 +30,5 @@ The captain's four diagonal idle frames are PixelLab's own rotations. The diagon
 ## NPC facings and breathing
 
 Khun Phithak Wari, Tan Heng and Mae Im use all 8 of their PixelLab rotations, so they can turn to face the captain. Each also has a 4-frame `breathing-idle` loop (south) in `anim/`. PixelLab redrew the breathing frames 1-4 px shorter than the rotations, so they play only at rest, and the switch happens as the character turns. The olive ground patch was also removed from Mae Im's new rotations. The atlas has 32 idle columns (8 facings for each of the 4 characters), 8 captain walk rows and 3 NPC breathing rows.
+
+After playtesting, breathing was switched off for Khun Phithak Wari and Tan Heng (`BREATHES` in `dist/engine/actors.js`): their breathing frames are 3-4 px shorter than their standing sprites and looked shrunken. Mae Im keeps hers, since her frames match her standing size. The frames remain in the atlas.
