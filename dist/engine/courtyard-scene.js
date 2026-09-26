@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {Reflector} from 'three/addons/objects/Reflector.js';
 export async function createCourtyard(scene){
  let seed=1685;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
  const mat=(color,extra={})=>new THREE.MeshStandardMaterial({color,roughness:.9,...extra});
@@ -18,7 +19,7 @@ export async function createCourtyard(scene){
  for(let i=0;i<22000;i++){const n=Math.floor(rand()*65);ctx.fillStyle=kind==='grass'?`rgba(${50+n},${67+n},${29+n*.55},.22)`:`rgba(${70+n},${61+n},${40+n},.15)`;ctx.fillRect(rand()*512,rand()*512,1+rand()*6,1+rand()*3);}
  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(kind==='grass'?12:2,kind==='grass'?12:2);t.anisotropy=4;return t;}
  const grassTex=texture('grass'),sandTex=texture('sand');
- const floor=mesh(new THREE.PlaneGeometry(70,70),mat('#d4d2a5',{map:grassTex}),-12,-.08,-4);floor.rotation.x=-Math.PI/2;
+ const floor=mesh(new THREE.PlaneGeometry(57,70),mat('#d4d2a5',{map:grassTex}),-18.5,-.08,-4);floor.rotation.x=-Math.PI/2;floor.material.map.repeat.set(12*57/70,12);
  const pathMat=mat('#c5b891',{map:sandTex});
  const path=box(0,-.035,3.5,4,.09,15,pathMat);path.receiveShadow=true;
  box(-3.6,-.04,2.1,11,.08,3.7,pathMat);box(5,-.04,4.6,7,.08,4,pathMat);
@@ -60,6 +61,20 @@ export async function createCourtyard(scene){
  #include <colorspace_fragment>
  }`});
  const river=mesh(new THREE.PlaneGeometry(20,80,1,1),water,20,-.28,-10,true);river.rotation.x=-Math.PI/2;river.castShadow=false;
+ // Reflective river (Cinematic mode): a mirrored render of the scene, rippled and tinted with the water colour.
+ // Performance mode shows the plain animated water above instead.
+ const mirrorShader={name:'RiverReflection',uniforms:{color:{value:null},tDiffuse:{value:null},textureMatrix:{value:null},time:{value:0},night:{value:0}},
+ vertexShader:`uniform mat4 textureMatrix;varying vec4 vUv;varying vec3 p;void main(){p=position;vUv=textureMatrix*vec4(position,1.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+ fragmentShader:`uniform sampler2D tDiffuse;uniform float time,night;varying vec4 vUv;varying vec3 p;void main(){float w=sin(p.x*6.+p.y*2.+time*.9)*sin(p.y*8.-time*.6);
+ vec4 uv=vUv;uv.xy+=vec2(sin(p.y*3.1+time*1.3),cos(p.x*2.7+time*1.1))*.012*uv.w;vec3 refl=texture2DProj(tDiffuse,uv).rgb;
+ vec3 base=mix(vec3(.018,.055,.045),vec3(.04,.095,.08),w*.5+.5)*mix(1.,.35,night);
+ float fine=pow(max(0.,sin((p.x+p.y)*9.+time*1.4+sin(p.y*1.7))*sin((p.x-p.y*1.3)*7.-time)),18.);
+ gl_FragColor=vec4(base+refl*vec3(.12,.16,.15)+fine*.05*mix(1.,.4,night),1.);
+ #include <tonemapping_fragment>
+ #include <colorspace_fragment>
+ }`};
+ const mirror=new Reflector(new THREE.PlaneGeometry(20,80),{textureWidth:1024,textureHeight:1024,clipBias:.003,multisample:0,shader:mirrorShader});
+ mirror.position.set(20,-.279,-10);mirror.rotation.x=-Math.PI/2;scene.add(mirror);river.visible=false;
  const rock=new THREE.DodecahedronGeometry(1,0),rockMat=mat('#a4a184');
  for(let z=-20;z<25;z+=.52){instance('bank',rock,rockMat,10.2+rand()*.15,-.12,z,.45+rand()*.3,.4+rand()*.2,.4,rand()*6,['#797f6b','#a5a88d','#bec0a1'][Math.floor(rand()*3)]);}
  // Mooring platform and rope bollards.
@@ -90,6 +105,6 @@ export async function createCourtyard(scene){
  const sun=new THREE.DirectionalLight('#ffe1a3',3.2);sun.position.set(-12,19,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-19,right:19,top:19,bottom:-19,near:.5,far:70});sun.shadow.bias=-.00025;sun.shadow.normalBias=.035;scene.add(sun);
  scene.background=new THREE.Color('#9cbaa4');scene.fog=new THREE.Fog('#9cbaa4',50,100);
  const dustGeo=new THREE.BufferGeometry();const dust=new Float32Array(180*3);for(let i=0;i<180;i++){dust[i*3]=-10+rand()*20;dust[i*3+1]=.3+rand()*4;dust[i*3+2]=-10+rand()*21;}dustGeo.setAttribute('position',new THREE.BufferAttribute(dust,3));const dustMat=new THREE.PointsMaterial({color:'#ffe6ae',size:.04,transparent:true,opacity:.55,depthWrite:false});const motes=new THREE.Points(dustGeo,dustMat);scene.add(motes);
- let night=0,goal=0;return{target,roof,lamps,setEvening(v){goal=v?1:0;},update(dt,time,inRoom){night=THREE.MathUtils.damp(night,goal,2,dt);water.uniforms.time.value=time;water.uniforms.night.value=night;hemi.intensity=THREE.MathUtils.lerp(1.6,.5,night);sun.intensity=THREE.MathUtils.lerp(3.2,.48,night);sun.color.set('#ffe1a3').lerp(new THREE.Color('#96adcf'),night);scene.background.set('#9cbaa4').lerp(new THREE.Color('#253f50'),night);scene.fog.color.copy(scene.background);wind.value=time;lamps.forEach((l,i)=>l.intensity=THREE.MathUtils.lerp(2,25,night)*(.93+.05*Math.sin(time*8.3+i*2.1)+.03*Math.sin(time*21.7+i*5.3)));glow.emissiveIntensity=THREE.MathUtils.lerp(1.2,5.5,night);haloMat.opacity=THREE.MathUtils.lerp(.2,1,night);dustMat.opacity=.35+night*.55;dustMat.size=.04+night*.05;motes.position.x=Math.sin(time*.12)*.25;motes.position.y=Math.sin(time*.4)*.12;
- for(const o of roof)o.visible=!inRoom;for(const o of shell)o.visible=!inRoom;},dispose(){scene.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of(Array.isArray(o.material)?o.material:[o.material])){for(const v of Object.values(m))if(v?.isTexture)v.dispose();m.dispose();}});}};
+ let night=0,goal=0;return{target,roof,lamps,setReflections(on){mirror.visible=on;river.visible=!on;},setEvening(v){goal=v?1:0;},update(dt,time,inRoom){night=THREE.MathUtils.damp(night,goal,2,dt);water.uniforms.time.value=time;water.uniforms.night.value=night;hemi.intensity=THREE.MathUtils.lerp(1.6,.5,night);sun.intensity=THREE.MathUtils.lerp(3.2,.48,night);sun.color.set('#ffe1a3').lerp(new THREE.Color('#96adcf'),night);scene.background.set('#9cbaa4').lerp(new THREE.Color('#253f50'),night);scene.fog.color.copy(scene.background);wind.value=time;mirror.material.uniforms.time.value=time;mirror.material.uniforms.night.value=night;lamps.forEach((l,i)=>l.intensity=THREE.MathUtils.lerp(2,25,night)*(.93+.05*Math.sin(time*8.3+i*2.1)+.03*Math.sin(time*21.7+i*5.3)));glow.emissiveIntensity=THREE.MathUtils.lerp(1.2,5.5,night);haloMat.opacity=THREE.MathUtils.lerp(.2,1,night);dustMat.opacity=.35+night*.55;dustMat.size=.04+night*.05;motes.position.x=Math.sin(time*.12)*.25;motes.position.y=Math.sin(time*.4)*.12;
+ for(const o of roof)o.visible=!inRoom;for(const o of shell)o.visible=!inRoom;},dispose(){mirror.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of(Array.isArray(o.material)?o.material:[o.material])){for(const v of Object.values(m))if(v?.isTexture)v.dispose();m.dispose();}});}};
 }
