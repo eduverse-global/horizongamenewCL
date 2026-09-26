@@ -54,22 +54,36 @@ Each character has a greeting and four lines of original EN/TH text. The NPCs ad
 | **Mae Im** (แม่อิ่ม), keeper of the river lodge | Lodge | Dutch intervention at Bantam; jasmine for Mae Ya Nang, the boat spirit; the spires of Wat Phra Si Sanphet at dusk; rest and morale |
 | **The captain** | Gangway | "The tide is turning. Do we go aboard?" |
 
-## 5. How this fits the existing Siam chapter draft
+## 5. Decisions (owner, 2026-09-26)
 
-`SIAM-FIRST-CHAPTER.md` (Draft 0.1, *A Letter Against the Tide*) and the Horinzonnext spec were written separately. They agree on the Narai era, the France embassy as the campaign frame, the 1 September 1686 anchor, grounded history with a light touch of folklore, and fictional leads beside real figures. Where they differ:
+`SIAM-FIRST-CHAPTER.md` (Draft 0.1, *A Letter Against the Tide*) and the Horinzonnext spec were written separately. They agree on the Narai era, the France embassy as the campaign frame, the 1 September 1686 anchor, grounded history with a light touch of folklore, and fictional leads beside real figures. Their differences are now settled:
 
-| Topic | Siam chapter draft 0.1 | Horinzonnext (approved) | Suggested merge |
-| --- | --- | --- | --- |
-| Campaign window | 1685–1688, opening about 1685 | Opens 1 January 1682 | Open in 1682; set *A Letter Against the Tide* in autumn 1685, while Chaumont's embassy is in Ayutthaya and Kosa Pan's fleet prepares |
-| Protagonists | Six eventual; Niran (river pilot) and Mali (interpreter's assistant) open | Five leads; the Thai captain opens | Undecided: keep Niran and Mali as chapter companions who meet the Thai captain, or fold them into the lead list |
-| Folklore | Ambiguous; no supernatural combat | Beliefs are real within the story, mostly on land | Compatible: the sanctuary lantern beat already fits |
-| First place | Bang Kok district → Ayutthaya landing | Ayutthaya riverside landing | Use the quay cast at the Ayutthaya landing of beat 6, or as the opening scene |
-| Title | NARAI: Winds of Siam (working) | Horizonnext | Keep NARAI for this repo |
+| Topic | Decision |
+| --- | --- |
+| Start year | **The game opens on 1 January 1682** at Ayutthaya's riverside landing, with the court grieving the lost first embassy |
+| The Letter chapter | ***A Letter Against the Tide* takes place in autumn 1685**, while Chaumont's embassy is in Ayutthaya and Kosa Pan's fleet prepares to sail |
+| Niran and Mali | **Companions who meet the Thai captain.** The captain is the lead; Niran (river pilot) and Mali (interpreter's assistant) are not separate leads |
+| Folklore | Beliefs are real within the story, mostly on land; the sanctuary lantern beat stays ambiguous |
+| Title | NARAI: Winds of Siam (working title) for this repo |
 
-The open decisions are the start year and how Niran, Mali and the Thai captain relate. They belong to the owner and are not settled by this import.
+### The Letter chapter with the captain as lead
 
-## 6. Next steps
+The draft's beats keep their places and purposes; the captain plays them, and the companions bring their skills:
 
-1. Decide the two open items in §5.
-2. Wire `QUAY_CAST` into an Ayutthaya on-foot scene. The courtyard engine (`dist/engine/`) already has EN/TH dialogue, proximity interaction and saved choices. It needs sprites and portraits for the three NPCs, since the current art is the European Lisbon cast.
-3. Seek Thai review of the new Thai text for the timeline and leads in `narai-story.js`. The quay cast Thai comes unchanged from Horinzonnext.
+| Draft beat | Adapted |
+| --- | --- |
+| 1. A boat to keep (as Niran) | The captain needs a river pilot for a passenger run to Ayutthaya and meets Niran, whose family boat business is in debt; hiring him is the captain's choice |
+| 2. Two versions (as Mali) | Mali brings the captain the altered covering letter; the captain helps her compare it with the archive copy and question the clerk |
+| 3–6 | Unchanged in shape; the captain leads, Niran reads currents and shallow channels, Mali handles documents and the parley |
+
+The tactical escort prototype (`/combat.html`) already uses "Niran's escort" and "Mali's parley", which fits companions without changes.
+
+## 6. Status and next steps
+
+Done: `QUAY_CAST` is in the courtyard with PixelLab sprites (8 facings, walk cycles for the captain), layered Gemini portraits graded to the scene, and EN/TH dialogue. The courtyard quest is still a placeholder errand (the ledger).
+
+Next:
+1. Replace the placeholder with the **1 January 1682 opening** at the Ayutthaya landing: the captain arrives, the Krom Tha official receives him, news of the lost envoy ship hangs over the court, and the captain's first task points toward the sea. Include a first short cutscene.
+2. Connect the courtyard to the sailing game with one shared save.
+3. Build toward the 1685 Letter chapter (Niran and Mali, the Bang Kok district, the river route, the escort battle).
+4. Seek Thai review of the new Thai text for the timeline and leads in `narai-story.js`. The quay cast Thai comes unchanged from Horinzonnext.
