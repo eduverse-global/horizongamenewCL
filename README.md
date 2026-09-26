@@ -14,6 +14,8 @@ The `/combat.html` page opens a standalone river escort battle with English/Thai
 
 This milestone uses simple procedural ships and terrain to test mechanics. The sailing game remains the main entry, with `/voyage.html` as an alias and its original save format unchanged. Regional journey pacing, Siam towns, the new Narai-era campaign, and production art remain future milestones. See `docs/design/SIAM-FIRST-CHAPTER.md`.
 
+The Narai-era story canon (1682 opening, historical spine to Versailles 1686, five leads and the bilingual Ayutthaya quay cast) comes from the Horinzonnext project. It lives in `dist/data/narai-story.js`, and `docs/design/NARAI-STORY-CANON.md` reconciles it with the Siam chapter draft.
+
 ## Earlier sailing prototype controls
 
 - Click open water or a harbor marker to plot a course. Navigate around islands; auto-navigation plots ocean routes around continents.

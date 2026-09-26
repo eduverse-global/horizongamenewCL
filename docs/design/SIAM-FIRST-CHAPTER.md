@@ -2,6 +2,8 @@
 
 ## Draft 0.1: A Letter Against the Tide
 
+> **Updated by owner decisions, 2026-09-26** (see `NARAI-STORY-CANON.md` §5): the game opens on 1 January 1682; this chapter takes place in autumn 1685; the Thai captain is the lead, and Niran and Mali are companions who meet him, not playable leads. Where this draft says "as Niran" or "as Mali", read the captain with that companion.
+
 **Status:** planning document for review. This draft does not authorize implementation or change the running game. Character names, plot details, mechanics, timings, and numerical values below are design proposals, not historical claims or tested balance.
 
 **Player promise:** explore a living Siamese river port, form an unlikely partnership, and use your knowledge of people and waterways to bring a threatened passenger boat safely to Ayutthaya.

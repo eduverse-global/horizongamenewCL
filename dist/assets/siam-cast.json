@@ -1,0 +1,103 @@
+{
+ "cell": 48,
+ "columns": 32,
+ "rows": 16,
+ "idle": [
+  "captain-south",
+  "captain-west",
+  "captain-east",
+  "captain-north",
+  "captain-south-east",
+  "captain-north-east",
+  "captain-north-west",
+  "captain-south-west",
+  "official-south",
+  "official-west",
+  "official-east",
+  "official-north",
+  "official-south-east",
+  "official-north-east",
+  "official-north-west",
+  "official-south-west",
+  "merchant-south",
+  "merchant-west",
+  "merchant-east",
+  "merchant-north",
+  "merchant-south-east",
+  "merchant-north-east",
+  "merchant-north-west",
+  "merchant-south-west",
+  "innkeeper-south",
+  "innkeeper-west",
+  "innkeeper-east",
+  "innkeeper-north",
+  "innkeeper-south-east",
+  "innkeeper-north-east",
+  "innkeeper-north-west",
+  "innkeeper-south-west"
+ ],
+ "walk": {
+  "south": {
+   "row": 1,
+   "frames": 6
+  },
+  "west": {
+   "row": 2,
+   "frames": 6
+  },
+  "east": {
+   "row": 3,
+   "frames": 6
+  },
+  "north": {
+   "row": 4,
+   "frames": 6
+  },
+  "south-east": {
+   "row": 5,
+   "frames": 6
+  },
+  "north-east": {
+   "row": 6,
+   "frames": 6
+  },
+  "north-west": {
+   "row": 7,
+   "frames": 6
+  },
+  "south-west": {
+   "row": 8,
+   "frames": 6
+  }
+ },
+ "anim": {
+  "official-breathe": {
+   "row": 9,
+   "frames": 4
+  },
+  "merchant-breathe": {
+   "row": 10,
+   "frames": 4
+  },
+  "innkeeper-breathe": {
+   "row": 11,
+   "frames": 4
+  },
+  "innkeeper-garland-east": {
+   "row": 12,
+   "frames": 9
+  },
+  "official-wai-east": {
+   "row": 13,
+   "frames": 9
+  },
+  "official-wai-south": {
+   "row": 14,
+   "frames": 9
+  },
+  "official-wai-west": {
+   "row": 15,
+   "frames": 9
+  }
+ }
+}

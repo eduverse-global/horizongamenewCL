@@ -1,0 +1,98 @@
+"""Painted dialogue portraits for the Siam cast, generated with the Gemini API.
+
+Each request sends two references: the character's PixelLab sprite (identity, costume, colours)
+and the existing Mara portrait (painting style and framing). Results go to art/portraits/raw/,
+and a 4-cell atlas (captain, official, merchant, innkeeper) to dist/assets/siam-portraits.jpg.
+
+Usage: python scripts/gemini-portraits.py [id ...]   (needs Pillow)
+Auth: GEMINI_API_KEY if set; otherwise no key is sent and the session proxy is expected to add a
+credential stored for generativelanguage.googleapis.com (API key or GCP service account).
+Optional: GEMINI_IMAGE_MODEL (default gemini-2.5-flash-image). Existing raw portraits are kept
+unless their id is named on the command line.
+"""
+import base64, io, json, os, sys, urllib.request
+from pathlib import Path
+from PIL import Image
+
+root = Path(__file__).resolve().parent.parent
+raw = root / 'art/portraits/raw'; raw.mkdir(parents=True, exist_ok=True)
+MODEL = os.environ.get('GEMINI_IMAGE_MODEL', 'gemini-2.5-flash-image')
+STYLE = ('Painted head-and-shoulders character portrait for a story-driven RPG dialogue box, in the same '
+         'painting style, lighting and framing as the style reference: warm semi-realistic illustration, soft '
+         'brushwork, dark warm background, character slightly turned, looking toward the viewer. Square image. '
+         'No text, no border, no frame. Keep the character\'s identity, clothing and colours from the pixel-art '
+         'sprite reference, redrawn at full detail. Setting: the port of Ayutthaya, Siam, in the 1680s; '
+         'dress must stay period-appropriate and respectful.')
+CAST = {
+    'captain': ('captain-south', 'A young Thai sea captain of the royal trade fleet: mahadthai haircut (short on top, shaved sides), '
+                'deep red fitted jacket with gold buttons, white sash, a sword at the hip, determined and kind expression.'),
+    'official': ('official-south', 'Khun Phithak Wari, a middle-aged Siamese harbour official of the Krom Tha: mahadthai haircut, '
+                 'short beard, fitted long-sleeved white jacket with gold buttons, patterned sash, holding a folded ledger; '
+                 'dignified, courteous and shrewd.'),
+    'merchant': ('merchant-south', 'Tan Heng, a plump, good-humoured Chinese junk merchant: dark blue-grey long robe, black skullcap, '
+                 'moustache, an abacus at his belt; a trader\'s knowing smile.'),
+    'innkeeper': ('innkeeper-south', 'Mae Im, a young Siamese woman in her early twenties who keeps a riverside lodge: youthful, lively face with a playful smile, bright dark eyes, short black hair cropped in the Ayutthaya style, small gold earrings, green '
+                  'pha sabai breast cloth draped over one shoulder, a jasmine garland in her hand; a kind, teasing smile.'),
+}
+
+def png_b64(img):
+    buf = io.BytesIO(); img.save(buf, 'PNG'); return base64.b64encode(buf.getvalue()).decode()
+
+# Characters painted in the pixel-painted look (visible pixel grid, rich saturated colour) use
+# art/portraits/style/pixel-painted.png as their style reference instead of Mara.
+PIXEL_PAINTED = {'innkeeper'}
+PIXEL_STYLE = ('Close head-and-shoulders bust like the style reference: the face fills the upper half of the frame, body turned '
+               'three-quarters, head tilted slightly, looking at the viewer; rich saturated colours, dramatic warm key light from '
+               'the side, plain dark warm background, crisp jewellery highlights. ')
+
+def pixelate(img, width=150, colours=56):
+    # Pixel-painted finish: a closer crop on the face, livelier colour, then a coarse grid with a limited palette
+    # enlarged with hard square pixels.
+    from PIL import ImageEnhance
+    w, h = img.size; c = round(w * .78); x = (w - c) // 2 - round(w * .04); img = img.crop((max(0, x), round(h * .02), max(0, x) + c, round(h * .02) + c)).resize((w, h), Image.LANCZOS)
+    img = ImageEnhance.Brightness(ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.2)).enhance(1.1)).enhance(1.1)
+    small = img.resize((width, round(img.height * width / img.width)), Image.LANCZOS).quantize(colours, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGB')
+    return small.resize((img.width, img.height), Image.NEAREST)
+
+def style_reference(cid=None):
+    if cid in PIXEL_PAINTED:
+        return Image.open(root / 'art/portraits/style/pixel-painted.png').convert('RGB')
+    # Mara is the bottom-right cell of the 2x2 story portrait atlas.
+    atlas = Image.open(root / 'dist/assets/story-portraits.png').convert('RGB'); w, h = atlas.size
+    return atlas.crop((w // 2, h // 2, w, h))
+
+def generate(key, sprite, description, style):
+    sprite = Image.open(root / f'art/pixellab/png/{sprite}.png').convert('RGBA')
+    sprite = sprite.resize((sprite.width * 8, sprite.height * 8), Image.NEAREST)
+    body = {'contents': [{'parts': [
+        {'text': f'{STYLE}\nCharacter: {description}\nFirst image: pixel-art sprite of this character. Second image: style reference.'},
+        {'inline_data': {'mime_type': 'image/png', 'data': png_b64(sprite)}},
+        {'inline_data': {'mime_type': 'image/png', 'data': png_b64(style)}}]}],
+        'generationConfig': {'responseModalities': ['IMAGE']}}
+    req = urllib.request.Request(f'https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent',
+                                 data=json.dumps(body).encode(), headers={'Content-Type': 'application/json', **({'x-goog-api-key': key} if key else {})})
+    with urllib.request.urlopen(req, timeout=300) as r: reply = json.load(r)
+    for part in reply.get('candidates', [{}])[0].get('content', {}).get('parts', []):
+        data = part.get('inlineData') or part.get('inline_data')
+        if data: return Image.open(io.BytesIO(base64.b64decode(data['data']))).convert('RGB')
+    raise RuntimeError('no image in reply: ' + json.dumps(reply)[:500])
+
+def square(img, size=512):
+    s = min(img.size); x, y = (img.width - s) // 2, (img.height - s) // 2
+    return img.crop((x, y, x + s, y + s)).resize((size, size), Image.LANCZOS)
+
+if __name__ == '__main__':
+    key = os.environ.get('GEMINI_API_KEY')
+    wanted = sys.argv[1:] or [c for c in CAST if not (raw / f'{c}.png').exists()]
+    style = style_reference()
+    for cid in wanted:
+        sprite, description = CAST[cid]
+        if cid in PIXEL_PAINTED: description = PIXEL_STYLE + description
+        generate(key, sprite, description, style_reference(cid) if cid in PIXEL_PAINTED else style).save(raw / f'{cid}.png'); print('generated', cid)
+    missing = [c for c in CAST if not (raw / f'{c}.png').exists()]
+    if missing: sys.exit('missing portraits: ' + ', '.join(missing))
+    atlas = Image.new('RGB', (512 * len(CAST), 512))
+    for i, cid in enumerate(CAST):
+        img = square(Image.open(raw / f'{cid}.png').convert('RGB'))
+        atlas.paste(pixelate(img) if cid in PIXEL_PAINTED else img, (512 * i, 0))
+    atlas.save(root / 'dist/assets/siam-portraits.jpg', quality=88); print('wrote dist/assets/siam-portraits.jpg')

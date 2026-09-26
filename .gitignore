@@ -5,3 +5,4 @@ node_modules/
 # Reproducible DCC intermediates
 *.blend1
 dist/assets/*.raw.glb
+__pycache__/

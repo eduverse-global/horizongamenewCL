@@ -1,21 +1,56 @@
 import * as THREE from 'three';
-const FRAMES=[[[106,17,276,339],[448,17,622,344],[796,17,967,344]],[[100,366,267,691],[454,369,618,690],[808,367,987,691]],[[118,721,286,1045],[465,721,636,1045],[801,721,986,1045]],[[104,1070,277,1399],[448,1070,627,1416],[805,1070,978,1415]]];
+import {POINTS,SPEED,DASH,onLanding,faceToward} from './courtyard-state.js';
+// PixelLab cast atlas (art/pixellab): row 0 holds idle cells (the captain's eight facings, then the NPCs),
+// the other rows the captain's walk cycles; siam-cast.json names each idle column and gives each walk row's frame count.
+// SIZE follows HD-2D scale: characters large relative to buildings (door about 1.4x character height).
+const FACING={down:'south',left:'west',right:'east',up:'north','down-right':'south-east','up-right':'north-east','up-left':'north-west','down-left':'south-west'},NPC=['official','merchant','innkeeper'],SIZE=2.1;
+// One full walk cycle (both steps) per 2 m walked: about 10 frames a second at walking speed, and the feet do not slide.
+const CYCLE=2;
+// Characters stand still at rest (playtest preference). The PixelLab breathing loops stay in the atlas (layout.anim)
+// for cutscenes and special events: add an id here, or drive the rows from an event, to play one.
+const BREATHES=new Set();
 export async function createActors(scene){
- const loader=new THREE.TextureLoader();const [captain,cast]=await Promise.all([loader.loadAsync('/assets/captain-directions.png'),loader.loadAsync('/assets/story-sprites.png')]);
- for(const t of[captain,cast]){t.colorSpace=THREE.SRGBColorSpace;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;}
- function actor(map){const texture=map.clone();texture.needsUpdate=true;
- // Lit, cutout planes participate in scene depth and shadows. Bottom-anchored geometry.
- const geometry=new THREE.PlaneGeometry(1,1);geometry.translate(0,.5,0);
- const material=new THREE.MeshStandardMaterial({map:texture,alphaTest:.3,side:THREE.DoubleSide,roughness:1,metalness:0});
- const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=false;scene.add(mesh);
- const shadow=new THREE.Mesh(new THREE.CircleGeometry(.32,24),new THREE.MeshBasicMaterial({color:'#17221c',transparent:true,opacity:.20,depthWrite:false}));shadow.rotation.x=-Math.PI/2;scene.add(shadow);return{mesh,shadow,texture};}
- const player=actor(captain),mara=actor(cast);
- mara.texture.repeat.set(300/1983,394/793);mara.texture.offset.set(1515/1983,399/793);mara.mesh.scale.set(1.12,1.58,1);mara.mesh.position.set(-3.5,.025,2.1);mara.shadow.position.set(-3.5,.022,2.1);
- function update(s,moving,time,camera){const row={down:0,left:1,right:2,up:3}[s.facing],frame=moving?1+Math.floor(time*8)%2:0;const[x,y,r,b]=FRAMES[row][frame],w=r-x+6,h=b-y+6;
- player.texture.repeat.set(w/1086,h/1448);player.texture.offset.set((x-3)/1086,1-(b+3)/1448);player.mesh.scale.set(w*.0048,h*.0048,1);
- const height=s.z< -3.0?.34:s.z< -2.5?.2:.025;player.mesh.position.set(s.x,height,s.z);player.shadow.position.set(s.x,height+.005,s.z);
- // Y-only billboarding preserves grounded feet and a consistent vertical scale.
- const yaw=Math.atan2(camera.position.x-s.x,camera.position.z-s.z);player.mesh.rotation.y=yaw;mara.mesh.rotation.y=yaw;
+ const [atlas,layout]=await Promise.all([new THREE.TextureLoader().loadAsync('/assets/siam-cast.png'),fetch('/assets/siam-cast.json').then(r=>r.json())]);
+ atlas.colorSpace=THREE.SRGBColorSpace;atlas.magFilter=THREE.NearestFilter;atlas.minFilter=THREE.NearestFilter;atlas.generateMipmaps=false;
+ const {columns,rows}=layout,column=name=>layout.idle.indexOf(name);
+ const cell=(texture,col,row)=>texture.offset.set(col/columns,1-(row+1)/rows);
+ function actor(column,x,z){const texture=atlas.clone();texture.needsUpdate=true;texture.repeat.set(1/columns,1/rows);cell(texture,column,0);
+ // Lit, cutout planes participate in scene depth and shadows. Feet sit 3px above the cell bottom.
+ const geometry=new THREE.PlaneGeometry(1,1);geometry.translate(0,.5-3/48,0);
+ // Lit by the scene, with a small self-lit floor (emissiveMap) so sprites never sink to black at night.
+ const material=new THREE.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:'#ffffff',emissiveIntensity:.14,alphaTest:.3,side:THREE.DoubleSide,roughness:1,metalness:0});
+ const mesh=new THREE.Mesh(geometry,material);mesh.scale.set(SIZE,SIZE,1);mesh.position.set(x,.025,z);mesh.castShadow=true;scene.add(mesh);
+ const shadow=new THREE.Mesh(new THREE.CircleGeometry(.36,24),new THREE.MeshBasicMaterial({color:'#101812',transparent:true,opacity:.34,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.set(x,.022,z);scene.add(shadow);return{mesh,shadow,texture};}
+ const player=actor(column('captain-south'),0,0);
+ // A soft warm light carried with the player, as Octopath does, so the hero reads in dim areas.
+ const glow=new THREE.PointLight('#ffd9a8',1.2,4.5,2);scene.add(glow);let walked=0;const forward=new THREE.Vector3();
+ // NPCs rest facing the camera and breathe (PixelLab breathing-idle), each loop out of step; while talking they turn
+ // to face the captain, and turn back a moment after the conversation ends.
+ const npcs=POINTS.filter(p=>NPC.includes(p.id)).map((p,i)=>({...actor(column(p.id+'-south'),p.x,p.z),id:p.id,x:p.x,z:p.z,facing:'down',until:0,phase:i*.37}));
+ let clock=0;
+ // Special-event animations (layout.anim, named <who>-<action>-<direction>, e.g. 'official-wai-east'): play() runs the
+// one for the character's current facing once (a diagonal falls back to either of its parts, south-east to south or
+// east) and resolves when it ends (at once if there is none for that facing);
+// the character then returns to its facing cell. stop() cuts every animation short, as when a cutscene is skipped.
+ const playing=new Map();
+ function play(id,action,fps=7){const n=npcs.find(n=>n.id===id),dir=n&&FACING[n.facing],a=n&&[dir,...dir.split('-')].map(d=>layout.anim?.[`${id}-${action}-${d}`]).find(Boolean);if(!a?.frames)return Promise.resolve();
+  return new Promise(done=>{playing.get(id)?.done();playing.set(id,{a,start:clock,fps,done});});}
+ function stop(){for(const p of playing.values())p.done();playing.clear();}
+ function faceCaptain(id,s){const n=npcs.find(n=>n.id===id);if(!n)return;const probe={x:n.x,z:n.z,facing:n.facing};faceToward(probe,s);n.facing=probe.facing;n.until=Infinity;}
+ function release(id){const n=npcs.find(n=>n.id===id);if(n&&n.until===Infinity)n.until=clock+1.2;}
+ function update(s,moving,time,camera,dt=1/60){clock=time;
+ for(const n of npcs){if(n.facing!=='down'&&time>n.until)n.facing='down';const breathe=BREATHES.has(n.id)&&layout.anim?.[n.id+'-breathe'];
+  const p=playing.get(n.id);if(p){const f=Math.floor((time-p.start)*p.fps);if(f<p.a.frames){cell(n.texture,f,p.a.row);continue;}playing.delete(n.id);p.done();}
+  if(n.facing==='down'&&breathe?.frames)cell(n.texture,Math.floor((time/.3+n.phase*breathe.frames))%breathe.frames,breathe.row);else cell(n.texture,column(n.id+'-'+FACING[n.facing]),0);}
+ const walk=layout.walk[FACING[s.facing]];
+ if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
+ else{walked=0;cell(player.texture,column('captain-'+FACING[s.facing]),0);}
+ const height=s.z< -3.0?.34:s.z< -2.5?.2:onLanding(s.x,s.z)&&s.x>9.6?.1:.025;player.mesh.position.set(s.x,height,s.z);player.shadow.position.set(s.x,height+.005,s.z);glow.position.set(s.x,height+1.6,s.z+.6);
+ // Screen-aligned billboards (as in HD-2D): every sprite turns to the camera's heading, not toward the camera position,
+ // so a character looks the same wherever it stands on screen. Rotating around Y only keeps feet grounded, and
+ // stretching height by 1/cos(camera pitch) undoes the vertical squash of a camera looking down.
+ camera.getWorldDirection(forward);const yaw=Math.atan2(-forward.x,-forward.z),tall=SIZE/Math.max(.5,Math.cos(Math.asin(-forward.y)));
+ for(const a of[player,...npcs]){a.mesh.rotation.y=yaw;a.mesh.scale.y=tall;}
  }
- return{player,mara,update};
+ return{player,npcs,update,faceCaptain,release,play,stop};
 }
