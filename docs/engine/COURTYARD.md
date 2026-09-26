@@ -36,8 +36,8 @@ Revised after playtest feedback (the close camera lost the diorama feel) and res
 
 ## Opening chapter: Ayutthaya, 1 January 1682
 Text in `OPENING` (`dist/data/narai-story.js`, EN/TH); rules in `courtyard-state.js`; staging in `courtyard.js`.
-1. **Arrival cutscene** (new game, or `/courtyard.html?opening` to replay it): letterbox and a title card (Ayutthaya · 1 January 1682 · พ.ศ. 2225). The captain steps off his junk and walks the landing; Mae Im turns and offers her jasmine garland, and Khun Phithak Wari calls him to the trading court. Skip with the button or Escape.
-2. **meet**: Khun Phithak Wari greets him with a wai and gives the briefing (port dues, then the envoys' ship silent since Bantam). The task is to gather word.
+1. **Arrival cutscene** (new game, or `/courtyard.html?opening`, which restarts the whole chapter): letterbox and a title card (Ayutthaya · 1 January 1682 · พ.ศ. 2225). The captain steps off his junk and walks the landing; Mae Im turns and offers her jasmine garland, and Khun Phithak Wari calls him to the trading court. Skip with the button or Escape.
+2. **meet**: Khun Phithak Wari greets him with a wai (drawn facing east, west and south, so it plays from whichever side the captain stands) and gives the briefing (port dues, then the envoys' ship silent since Bantam). The task is to gather word.
 3. **word**: three sources in any order. Tan Heng (a Batavia junk's news), Mae Im (a Bantam sailor's storms) and the envoys' manifest in the pavilion. The objective counts them (n/3); the marker points to the nearest one not yet heard.
 4. **return**: the report, and a choice of how to tell the Phra Khlang: plainly (`tell`) or gently (`hope`). The choice is saved for later chapters.
 5. **complete**: the marker points to the junk at the end of the landing; the helmsman asks "The tide is turning. Do we go aboard?" and boarding opens the sailing game.

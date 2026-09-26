@@ -29,10 +29,11 @@ export async function createActors(scene){
  const npcs=POINTS.filter(p=>NPC.includes(p.id)).map((p,i)=>({...actor(column(p.id+'-south'),p.x,p.z),id:p.id,x:p.x,z:p.z,facing:'down',until:0,phase:i*.37}));
  let clock=0;
  // Special-event animations (layout.anim, named <who>-<action>-<direction>, e.g. 'official-wai-east'): play() runs the
-// one for the character's current facing once and resolves when it ends (at once if there is none for that facing);
+// one for the character's current facing once (a diagonal falls back to either of its parts, south-east to south or
+// east) and resolves when it ends (at once if there is none for that facing);
 // the character then returns to its facing cell. stop() cuts every animation short, as when a cutscene is skipped.
  const playing=new Map();
- function play(id,action,fps=7){const n=npcs.find(n=>n.id===id),a=n&&layout.anim?.[`${id}-${action}-${FACING[n.facing]}`];if(!a?.frames)return Promise.resolve();
+ function play(id,action,fps=7){const n=npcs.find(n=>n.id===id),dir=n&&FACING[n.facing],a=n&&[dir,...dir.split('-')].map(d=>layout.anim?.[`${id}-${action}-${d}`]).find(Boolean);if(!a?.frames)return Promise.resolve();
   return new Promise(done=>{playing.get(id)?.done();playing.set(id,{a,start:clock,fps,done});});}
  function stop(){for(const p of playing.values())p.done();playing.clear();}
  function faceCaptain(id,s){const n=npcs.find(n=>n.id===id);if(!n)return;const probe={x:n.x,z:n.z,facing:n.facing};faceToward(probe,s);n.facing=probe.facing;n.until=Infinity;}

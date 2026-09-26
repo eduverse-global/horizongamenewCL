@@ -1,7 +1,7 @@
 {
  "cell": 48,
  "columns": 32,
- "rows": 14,
+ "rows": 16,
  "idle": [
   "captain-south",
   "captain-west",
@@ -89,6 +89,14 @@
   },
   "official-wai-east": {
    "row": 13,
+   "frames": 9
+  },
+  "official-wai-south": {
+   "row": 14,
+   "frames": 9
+  },
+  "official-wai-west": {
+   "row": 15,
    "frames": 9
   }
  }

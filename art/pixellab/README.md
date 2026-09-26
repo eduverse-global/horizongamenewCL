@@ -42,3 +42,4 @@ For the 1682 opening, both in v3 mode, facing east (toward the captain in the cu
 
 The frames came from the spritesheet endpoint (68 px cells, cropped to the centre 48 px). The reference frame matched the east rotation pixel for pixel. Files are `anim/<who>-<action>-<direction>-<n>.png`; the atlas gives each group a row (`siam-cast.json` → `anim`), and `actors.play()` picks the one for the current facing.
 
+After playtesting, the wai was added facing west and south (1 generation each, in the same animation group) so Khun Phithak Wari greets the captain from either side or from the front. The west version bows holding the ledger. Diagonal facings fall back to the nearest drawn direction.

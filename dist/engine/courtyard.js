@@ -130,7 +130,9 @@ try{
  if(elapsed>=1){fps=Math.round(frames/elapsed);frames=elapsed=0;$('stats').textContent=`${fps} fps · ${runtime.renderer.info.render.calls} draws\n${Math.round(runtime.renderer.info.render.triangles/1000)}k triangles\n${runtime.renderer.info.memory.textures} textures`;}
  }
  raf=requestAnimationFrame(frame);
- if(!s.opened||new URLSearchParams(location.search).has('opening'))opening();
+ // ?opening restarts the chapter from the arrival (then leaves the address, so a reload carries on from there).
+ if(new URLSearchParams(location.search).has('opening')){s=fresh();history.replaceState(null,'',location.pathname);}
+ if(!s.opened)opening();
  // Read-only inspection for local QA, without teleporting or modifying simulation.
  window.naraiCourtyard={snapshot:()=>({ready:true,position:{x:s.x,z:s.z},quest:s.quest,word:[...s.word],choice:s.choice,opened:s.opened,cutscene:!!cutscene,inside:s.room,evening,enhanced:runtime.enhanced,fps,drawCalls:runtime.renderer.info.render.calls})};
  addEventListener('pagehide',()=>{save();cancelAnimationFrame(raf);world.dispose();runtime.dispose();audio?.close();},{once:true});
