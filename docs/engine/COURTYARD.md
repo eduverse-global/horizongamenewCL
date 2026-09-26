@@ -15,11 +15,14 @@ The sailing game remains the root page. Its courtyard link opens this independen
 - Optional on-screen frame/draw/triangle statistics, resize support and context-loss recovery prompt.
 
 ## HD-2D look pass
-- Closer diorama camera (about 34° pitch) that follows the player; characters fill roughly a tenth of the frame height.
-- Tilt-shift: the lens pass adds a screen-space blur band toward the top and bottom on top of scene-depth focus.
-- Period lanterns: teak posts with a carved bracket, hanging lanterns with clay rims and a red cap, an additive glow halo, and emissive glow that rises at dusk.
-- Static props are merged into one draw per material (`flush()` in `courtyard-scene.js`). Draw calls went from 536 to 107 in the courtyard and 79 inside, measured in headless Chromium (SwiftShader), where frame rate is not representative.
-- Grass blades have upward normals on both faces, so they are lit like the ground instead of rendering as dark spikes.
+Revised after playtest feedback (the close camera lost the diorama feel) and research into how Octopath Traveler, Dragon Quest III HD-2D and Live A Live present sprites (Acquire's Unreal Fest 2018 talk, the Unreal Engine spotlight, and Live A Live's Unreal Fest West '22 talk; see the commit history for sources).
+- Camera: the original wide diorama framing is the default. Mouse wheel or +/- zooms toward a close follow view. The lens is narrow (28° instead of 40°, camera moved back to keep the framing), as Acquire did to soften perspective.
+- Sprites: vertical billboards facing the camera around Y, with height stretched by 1/cos(camera pitch) so a downward-looking camera does not squash them. Characters are larger relative to buildings (the door is about 1.4x character height). A small self-lit floor keeps sprites readable at night, a warm light follows the player, and each character has a blob contact shadow plus a real silhouette shadow.
+- Movement: free 8-way with normalised diagonals, sliding along walls, and an 80 ms ease-in; click-to-walk routes use 8 neighbours without cutting corners. Each facing still has one drawn frame, so walking uses a stride-synced step bob and sway until walk-cycle frames exist.
+- Depth of field: mostly distance-based and mild, with a light tilt-shift band at the top edge and a trace at the bottom.
+- Lanterns: teak bracket posts with hanging lanterns, bright emissive glow and halo at dusk.
+- Static props are merged into one draw per material (`flush()` in `courtyard-scene.js`): 536 draw calls became about 110.
+- Grass blades are lit from above on both faces instead of rendering as dark spikes.
 
 ## Siam cast (PixelLab)
 - The player is the Thai captain from the Horinzonnext art test. Khun Phithak Wari (Krom Tha official) gives the ledger quest in Mara's place. Tan Heng (junk merchant) and Mae Im (river lodge) greet, then cycle their Horinzonnext lines from `dist/data/narai-story.js`.

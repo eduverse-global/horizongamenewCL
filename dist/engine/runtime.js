@@ -9,13 +9,13 @@ export function createRuntime(canvas,onContext){
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.13;
- const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(40,1,.1,100);
+ const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(28,1,.1,160);
  const target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,depthTexture:new THREE.DepthTexture(1,1)});
- const lens=new ShaderPass({uniforms:{tScene:{value:null},tDepth:{value:null},near:{value:.1},far:{value:100},focus:{value:26},aspect:{value:1},blur:{value:.0065}},
+ const lens=new ShaderPass({uniforms:{tScene:{value:null},tDepth:{value:null},near:{value:.1},far:{value:160},focus:{value:26},aspect:{value:1},blur:{value:.0045}},
  vertexShader:'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
  fragmentShader:`uniform sampler2D tScene,tDepth; uniform float near,far,focus,aspect,blur; varying vec2 vUv;
  float distanceAt(vec2 uv){float d=texture2D(tDepth,uv).x;return (near*far)/(far-d*(far-near));}
- void main(){float d=distanceAt(vUv);float band=max(smoothstep(.58,1.,vUv.y),smoothstep(.3,0.,vUv.y)*.75);float coc=max(clamp((abs(d-focus)-2.)/8.,0.,1.),band)*blur;
+ void main(){float d=distanceAt(vUv);float band=max(smoothstep(.7,1.,vUv.y)*.6,smoothstep(.15,0.,vUv.y)*.35);float coc=max(clamp((abs(d-focus)-3.)/12.,0.,1.),band)*blur;
  vec3 color=texture2D(tScene,vUv).rgb;float weight=1.;
  for(int i=0;i<16;i++){float a=float(i)*2.399963;vec2 offset=vec2(cos(a)/aspect,sin(a))*coc*sqrt((float(i)+1.)/16.);vec2 uv=vUv+offset;
  float w=abs(distanceAt(uv)-d)<3.?1.:.15;color+=texture2D(tScene,uv).rgb*w;weight+=w;}
@@ -24,7 +24,7 @@ export function createRuntime(canvas,onContext){
  const composer=new EffectComposer(renderer);composer.addPass(lens);
  const bloom=new UnrealBloomPass(new THREE.Vector2(1,1),.22,.48,1.2);composer.addPass(bloom);composer.addPass(new OutputPass());
  let enhanced=true,lost=false;const focusPoint=new THREE.Vector3();const view=new THREE.Vector3();
- function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setPixelRatio(Math.min(devicePixelRatio,enhanced?1.5:1));renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1?54:40;camera.updateProjectionMatrix();const size=renderer.getDrawingBufferSize(new THREE.Vector2());target.setSize(size.x,size.y);composer.setPixelRatio(renderer.getPixelRatio());composer.setSize(w,h);lens.uniforms.aspect.value=w/h;}
+ function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setPixelRatio(Math.min(devicePixelRatio,enhanced?1.5:1));renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<1?40:28;camera.updateProjectionMatrix();const size=renderer.getDrawingBufferSize(new THREE.Vector2());target.setSize(size.x,size.y);composer.setPixelRatio(renderer.getPixelRatio());composer.setSize(w,h);lens.uniforms.aspect.value=w/h;}
  function loss(e){e.preventDefault();lost=true;onContext(false);}
  function recovery(){onContext(true);}
  canvas.addEventListener('webglcontextlost',loss);canvas.addEventListener('webglcontextrestored',recovery);addEventListener('resize',resize);resize();

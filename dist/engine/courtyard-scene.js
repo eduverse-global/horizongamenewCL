@@ -35,11 +35,11 @@ export async function createCourtyard(scene){
  // Teak post on a stone footing, carved bracket, and a hanging lantern with clay rims under a small red cap.
  function lantern(x,z,y=2.2,side=1){box(x,y/2,z,.12,y,.12,wood);box(x,.06,z,.3,.12,.3,stone);box(x+side*.26,y-.02,z,.62,.08,.09,wood);
  const bx=x+side*.46;box(bx,y-.2,z,.012,.34,.012,dark);
- mesh(new THREE.CylinderGeometry(.16,.13,.34,10),glow,bx,y-.55,z);
- for(const dy of[-.19,.19])mesh(new THREE.CylinderGeometry(.175,.175,.035,10),clay,bx,y-.55+dy,z);
- const cap=mesh(new THREE.ConeGeometry(.24,.16,4),cloth,bx,y-.28,z);cap.rotation.y=Math.PI/4;
- box(bx,y-.8,z,.02,.14,.02,cloth);
- const halo=new THREE.Sprite(haloMat);halo.position.set(bx,y-.55,z);halo.scale.setScalar(1.5);scene.add(halo);
+ mesh(new THREE.CylinderGeometry(.22,.18,.44,10),glow,bx,y-.58,z);
+ for(const dy of[-.24,.24])mesh(new THREE.CylinderGeometry(.235,.235,.04,10),clay,bx,y-.58+dy,z);
+ const cap=mesh(new THREE.ConeGeometry(.3,.18,4),cloth,bx,y-.26,z);cap.rotation.y=Math.PI/4;
+ box(bx,y-.9,z,.02,.14,.02,cloth);
+ const halo=new THREE.Sprite(haloMat);halo.position.set(bx,y-.58,z);halo.scale.setScalar(2.2);scene.add(halo);
  const light=new THREE.PointLight('#ffc17a',0,8,2);light.position.set(bx,y-.55,z);scene.add(light);lamps.push(light);}
  for(const [x,z,side]of[[-2.3,-2.3,-1],[2.3,-2.3,1],[7.8,2.1,-1],[-6.3,1.8,1],[-2.8,7.8,1]])lantern(x,z,2.2,side);
  const indoor=new THREE.PointLight('#ffbf73',14,10,2);indoor.position.set(0,2.5,-6.8);scene.add(indoor);
@@ -86,8 +86,8 @@ export async function createCourtyard(scene){
  pavilion.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.userData.visibilityRole==='Roof'||o.name.startsWith('Roof'))roof.push(o);if(o.userData.visibilityRole==='Shell'||o.name.startsWith('Shell'))shell.push(o);}});scene.add(pavilion);
  const hemi=new THREE.HemisphereLight('#cee5dd','#566047',1.6);scene.add(hemi);
  const sun=new THREE.DirectionalLight('#ffe1a3',3.2);sun.position.set(-12,19,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-19,right:19,top:19,bottom:-19,near:.5,far:70});sun.shadow.bias=-.00025;sun.shadow.normalBias=.035;scene.add(sun);
- scene.background=new THREE.Color('#9cbaa4');scene.fog=new THREE.Fog('#9cbaa4',36,70);
+ scene.background=new THREE.Color('#9cbaa4');scene.fog=new THREE.Fog('#9cbaa4',50,100);
  const dustGeo=new THREE.BufferGeometry();const dust=new Float32Array(180*3);for(let i=0;i<180;i++){dust[i*3]=-10+rand()*20;dust[i*3+1]=.3+rand()*4;dust[i*3+2]=-10+rand()*21;}dustGeo.setAttribute('position',new THREE.BufferAttribute(dust,3));const dustMat=new THREE.PointsMaterial({color:'#ffe6ae',size:.04,transparent:true,opacity:.55,depthWrite:false});const motes=new THREE.Points(dustGeo,dustMat);scene.add(motes);
- let night=0,goal=0;return{target,roof,lamps,setEvening(v){goal=v?1:0;},update(dt,time,inRoom){night=THREE.MathUtils.damp(night,goal,2,dt);water.uniforms.time.value=time;water.uniforms.night.value=night;hemi.intensity=THREE.MathUtils.lerp(1.6,.5,night);sun.intensity=THREE.MathUtils.lerp(3.2,.48,night);sun.color.set('#ffe1a3').lerp(new THREE.Color('#96adcf'),night);scene.background.set('#9cbaa4').lerp(new THREE.Color('#253f50'),night);scene.fog.color.copy(scene.background);lamps.forEach(l=>l.intensity=THREE.MathUtils.lerp(2,25,night));glow.emissiveIntensity=THREE.MathUtils.lerp(.6,3.2,night);haloMat.opacity=THREE.MathUtils.lerp(.12,.85,night);dustMat.opacity=.35+night*.55;dustMat.size=.04+night*.05;motes.position.x=Math.sin(time*.12)*.25;motes.position.y=Math.sin(time*.4)*.12;
+ let night=0,goal=0;return{target,roof,lamps,setEvening(v){goal=v?1:0;},update(dt,time,inRoom){night=THREE.MathUtils.damp(night,goal,2,dt);water.uniforms.time.value=time;water.uniforms.night.value=night;hemi.intensity=THREE.MathUtils.lerp(1.6,.5,night);sun.intensity=THREE.MathUtils.lerp(3.2,.48,night);sun.color.set('#ffe1a3').lerp(new THREE.Color('#96adcf'),night);scene.background.set('#9cbaa4').lerp(new THREE.Color('#253f50'),night);scene.fog.color.copy(scene.background);lamps.forEach(l=>l.intensity=THREE.MathUtils.lerp(2,25,night));glow.emissiveIntensity=THREE.MathUtils.lerp(1.2,5.5,night);haloMat.opacity=THREE.MathUtils.lerp(.2,1,night);dustMat.opacity=.35+night*.55;dustMat.size=.04+night*.05;motes.position.x=Math.sin(time*.12)*.25;motes.position.y=Math.sin(time*.4)*.12;
  for(const o of roof)o.visible=!inRoom;for(const o of shell)o.visible=!inRoom;},dispose(){scene.traverse(o=>{o.geometry?.dispose();if(o.material)for(const m of(Array.isArray(o.material)?o.material:[o.material])){for(const v of Object.values(m))if(v?.isTexture)v.dispose();m.dispose();}});}};
 }
