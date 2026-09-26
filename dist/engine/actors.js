@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {POINTS,SPEED} from './courtyard-state.js';
+import {POINTS,SPEED,DASH} from './courtyard-state.js';
 // PixelLab cast atlas (art/pixellab): row 0 holds idle cells (captain south/west/east/north, then the NPCs),
 // rows 1-4 the captain's walk cycles; siam-cast.json gives each row's frame count.
 // SIZE follows HD-2D scale: characters large relative to buildings (door about 1.4x character height).
@@ -21,10 +21,10 @@ export async function createActors(scene){
  const player=actor(0,0,0);
  // A soft warm light carried with the player, as Octopath does, so the hero reads in dim areas.
  const glow=new THREE.PointLight('#ffd9a8',1.2,4.5,2);scene.add(glow);let walked=0;
- const npcs=POINTS.filter(p=>p.id in NPC).map(p=>actor(NPC[p.id],p.x,p.z));
+ const npcs=POINTS.filter(p=>p.id in NPC).map(p=>({...actor(NPC[p.id],p.x,p.z),id:p.id}));
  function update(s,moving,time,camera,dt=1/60){
  const walk=layout.walk[FACING[s.facing]];
- if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
+ if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
  else{walked=0;cell(player.texture,IDLE[s.facing],0);}
  const height=s.z< -3.0?.34:s.z< -2.5?.2:.025;player.mesh.position.set(s.x,height,s.z);player.shadow.position.set(s.x,height+.005,s.z);glow.position.set(s.x,height+1.6,s.z+.6);
  // Y-only billboarding keeps feet grounded; stretching height by 1/cos(pitch) undoes the vertical squash of a camera looking down.

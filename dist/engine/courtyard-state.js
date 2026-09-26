@@ -30,14 +30,16 @@ export function approachRoute(s,p,isPerson){
  return [];
 }
 export function faceToward(s,p){const dx=p.x-s.x,dz=p.z-s.z;s.facing=Math.abs(dx)>Math.abs(dz)?(dx<0?'left':'right'):(dz<0?'up':'down');}
-export function move(s,dx,dz,dt){
+// dash (hold Shift, as added in Dragon Quest I & II HD-2D) moves 1.8x faster.
+export const DASH=1.8;
+export function move(s,dx,dz,dt,dash=false){
  if(!Number.isFinite(dt)||dt<=0)return false;
  dt=Math.min(dt,.05);const len=Math.hypot(dx,dz);
  if(!len){s.v=0;return false;}
  dx/=len;dz/=len;s.v=Math.min(1,(s.v||0)+dt/.08);
  const ax=Math.abs(dx),az=Math.abs(dz),vertical=s.facing==='up'||s.facing==='down';
  if(vertical?az>=ax*.77:az>ax*1.3)s.facing=dz<0?'up':'down';else s.facing=dx<0?'left':'right';
- const step=dt*SPEED*s.v;
+ s.dash=dash;const step=dt*SPEED*s.v*(dash?DASH:1);
  for(const[mx,mz]of[[dx,dz],[dx,0],[0,dz]]){if(!mx&&!mz)continue;const x=s.x+mx*step,z=s.z+mz*step;if(walkable(x,z)){s.x=x;s.z=z;s.room=inside(s);return true;}}
  return false;
 }
