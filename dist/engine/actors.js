@@ -20,15 +20,17 @@ export async function createActors(scene){
  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.36,24),new THREE.MeshBasicMaterial({color:'#101812',transparent:true,opacity:.34,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.set(x,.022,z);scene.add(shadow);return{mesh,shadow,texture};}
  const player=actor(column('captain-south'),0,0);
  // A soft warm light carried with the player, as Octopath does, so the hero reads in dim areas.
- const glow=new THREE.PointLight('#ffd9a8',1.2,4.5,2);scene.add(glow);let walked=0;
+ const glow=new THREE.PointLight('#ffd9a8',1.2,4.5,2);scene.add(glow);let walked=0;const forward=new THREE.Vector3();
  const npcs=POINTS.filter(p=>p.id in NPC).map(p=>({...actor(column(NPC[p.id]),p.x,p.z),id:p.id}));
  function update(s,moving,time,camera,dt=1/60){
  const walk=layout.walk[FACING[s.facing]];
  if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
  else{walked=0;cell(player.texture,column('captain-'+FACING[s.facing]),0);}
  const height=s.z< -3.0?.34:s.z< -2.5?.2:onLanding(s.x,s.z)&&s.x>9.6?.1:.025;player.mesh.position.set(s.x,height,s.z);player.shadow.position.set(s.x,height+.005,s.z);glow.position.set(s.x,height+1.6,s.z+.6);
- // Y-only billboarding keeps feet grounded; stretching height by 1/cos(pitch) undoes the vertical squash of a camera looking down.
- const yaw=Math.atan2(camera.position.x-s.x,camera.position.z-s.z),pitch=Math.atan2(camera.position.y,Math.hypot(camera.position.x-s.x,camera.position.z-s.z)),tall=SIZE/Math.max(.5,Math.cos(pitch));
+ // Screen-aligned billboards (as in HD-2D): every sprite turns to the camera's heading, not toward the camera position,
+ // so a character looks the same wherever it stands on screen. Rotating around Y only keeps feet grounded, and
+ // stretching height by 1/cos(camera pitch) undoes the vertical squash of a camera looking down.
+ camera.getWorldDirection(forward);const yaw=Math.atan2(-forward.x,-forward.z),tall=SIZE/Math.max(.5,Math.cos(Math.asin(-forward.y)));
  for(const a of[player,...npcs]){a.mesh.rotation.y=yaw;a.mesh.scale.y=tall;}
  }
  return{player,npcs,update};
