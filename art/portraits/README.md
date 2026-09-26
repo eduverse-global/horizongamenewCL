@@ -10,3 +10,7 @@ Regenerate one: `python scripts/gemini-portraits.py merchant` (needs Pillow and 
 Mae Im's portrait was regenerated after playtest feedback to show her as a young woman in her early twenties.
 
 Mae Im was then redone in a pixel-painted style at the user's request. The style reference is `style/pixel-painted.png`, a portrait crop from the user's screenshot of another build. The generated painting is cropped closer, given livelier colour, and reduced to a 150 px grid with 56 colours before being enlarged with hard square pixels (`pixelate()` in the script). Other characters keep the smooth painted style unless added to `PIXEL_PAINTED`.
+
+## Layered portraits
+
+`scripts/gemini-layered.py` generates a character on a flat magenta screen (magenta, because Mae Im's cloth is green) and keys it out. It also generates location backdrops without people. Both get the pixel-painted finish. Raw generations are kept in `layered/`. The dialogue box stacks the cut-out over the backdrop that matches the location and time of day.

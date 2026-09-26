@@ -26,3 +26,7 @@ The idle frames rebuilt from text exports were checked against PixelLab's origin
 ## Diagonals
 
 The captain's four diagonal idle frames are PixelLab's own rotations. The diagonal walk cycles (`walk/captain-{south-east,north-east,north-west,south-west}-*.png`) are v3 mode, 6 frames each, cropped from 64 px cells to the centre 48 px and checked for alignment. The atlas now has 11 idle columns and 8 walk rows.
+
+## NPC facings and breathing
+
+Khun Phithak Wari, Tan Heng and Mae Im use all 8 of their PixelLab rotations, so they can turn to face the captain. Each also has a 4-frame `breathing-idle` loop (south) in `anim/`. PixelLab redrew the breathing frames 1-4 px shorter than the rotations, so they play only at rest, and the switch happens as the character turns. The olive ground patch was also removed from Mae Im's new rotations. The atlas has 32 idle columns (8 facings for each of the 4 characters), 8 captain walk rows and 3 NPC breathing rows.

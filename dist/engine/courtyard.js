@@ -14,11 +14,17 @@ const markerButtons=new Map();let noticeTimer;
 function notice(text){$('notice').textContent=text;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('notice').textContent='',4000);}
 function save(){try{localStorage.setItem(saveKey,JSON.stringify({quest:s.quest,choice:s.choice,x:s.x,z:s.z,facing:s.facing}));}catch{notice(lang==='th'?'ไม่สามารถบันทึกในเบราว์เซอร์นี้ได้':'Browser storage is unavailable.');}}
 function labels(){document.documentElement.lang=lang;$('title').textContent=t('title');$('voyage').textContent=t('sea');$('language').textContent=lang==='en'?'ไทย':'EN';$('time').textContent=t(evening?'night':'day');$('quality').textContent=t(runtime?.enhanced?'quality':'basic');$('controls').textContent=t('controls');$('attack').textContent=t('attack');$('stats-label').textContent=t('stats');$('objective').textContent=t(s.quest==='ledger'?'ledgerQuest':s.quest);for(const[id,b]of markerButtons)b.textContent=t(id);if(activeDialogue)showDialogue(activeDialogue);}
-function close(){dialog.close();activeDialogue=null;keys.clear();canvas.focus({preventScroll:true});}
+function close(){if(activeDialogue)actors?.release(activeDialogue);dialog.close();activeDialogue=null;keys.clear();canvas.focus({preventScroll:true});}
 // Speakers map to the Horinzonnext quay cast and to their cell in the Gemini portrait atlas (captain is cell 0).
 const CAST={official:['harbour_official',1,'KROM THA · ROYAL LANDING','กรมท่า · ท่าเรือหลวง'],merchant:['junk_merchant',2,'JUNK MERCHANT','พ่อค้าสำเภา'],innkeeper:['innkeeper',3,'RIVER LODGE','เรือนพักริมน้ำ']};
 const visits={};
-function portrait(cell){const el=$('portrait'),w=el.clientWidth||210,h=el.clientHeight||250,size=Math.max(w,h);el.style.backgroundSize=`${4*size}px ${size}px`;el.style.backgroundPosition=`${-(cell*size+(size-w)/2)}px 0px`;}
+// Layered portraits: a cut-out character over a backdrop for the current location and time of day (Mae Im first);
+// other speakers use their cell in the painted portrait atlas.
+const LAYERED={innkeeper:'innkeeper'},LOCATION='courtyard';
+function portrait(cell,id){const el=$('portrait');
+ if(LAYERED[id]){Object.assign(el.style,{backgroundImage:`url('/assets/portraits/${LAYERED[id]}.png'),url('/assets/portraits/bg-${LOCATION}-${evening?'evening':'day'}.jpg')`,backgroundSize:'cover, cover',backgroundPosition:'50% 0, 50% 50%',imageRendering:'pixelated'});return;}
+ Object.assign(el.style,{backgroundImage:'',imageRendering:''});
+const w=el.clientWidth||210,h=el.clientHeight||250,size=Math.max(w,h);el.style.backgroundSize=`${4*size}px ${size}px`;el.style.backgroundPosition=`${-(cell*size+(size-w)/2)}px 0px`;}
 function showDialogue(id){const first=activeDialogue!==id;activeDialogue=id;keys.clear();path=[];pending=null;const cast=CAST[id];$('portrait').hidden=!cast;$('role').textContent=cast?cast[lang==='th'?3:2]:'NARAI';$('speaker').textContent=cast?say(QUAY_CAST[cast[0]].name,lang):t(id);
  const key=id==='official'&&s.quest==='complete'?'officialDone':id;if(cast&&first)visits[key]=(visits[key]??-1)+1;
  let text=id==='gate'?'gated':id==='ledger'?'read':s.quest==='meet'?'hello':s.quest==='ledger'?'waiting':s.quest==='return'?'choice':s.choice==='share'?'shared':'kept';
@@ -29,8 +35,8 @@ function showDialogue(id){const first=activeDialogue!==id;activeDialogue=id;keys
  if(id==='official'&&s.quest==='meet')option('accept',()=>commit());
  if(id==='ledger'&&s.quest==='ledger')option('inspect',()=>commit());
  if(id==='official'&&s.quest==='return'){option('share',()=>commit('share'));option('keep',()=>commit('keep'));}
- option('close',close);if(!dialog.open)dialog.showModal();if(cast)portrait(cast[1]);}
-dialog.addEventListener('cancel',()=>{activeDialogue=null;keys.clear();});
+ option('close',close);if(!dialog.open)dialog.showModal();if(cast){portrait(cast[1],id);actors?.faceCaptain(id,s);}}
+dialog.addEventListener('cancel',()=>{if(activeDialogue)actors?.release(activeDialogue);activeDialogue=null;keys.clear();});
 function interact(){const n=nearest(s);if(n.distance>1.85){notice(t('far'));return;}if(n.id==='training')strike();else showDialogue(n.id);}
 let effect,flash,sparks;let audio;
 function strike(){if(dialog.open||attackAge<.65)return;const p=POINTS.find(p=>p.id==='training');if(Math.hypot(s.x-p.x,s.z-p.z)>2.8){notice(t('strikeFar'));return;}attackAge=0;path=[];s.facing=s.x>p.x?'left':'right';

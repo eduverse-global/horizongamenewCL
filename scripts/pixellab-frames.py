@@ -34,15 +34,21 @@ for f in sorted(src.glob('*.json')):
 # rows 1-8 hold the captain's walk cycles in the same direction order, from art/pixellab/walk/.
 # The frame count of each walk row is written to dist/assets/siam-cast.json.
 WALK = ['south', 'west', 'east', 'north', 'south-east', 'north-east', 'north-west', 'south-west']
-CELLS = [f'captain-{d}' for d in WALK] + ['official-south', 'merchant-south', 'innkeeper-south']
+NPCS = ['official', 'merchant', 'innkeeper']
+# Idle row: the captain's eight facings, then each NPC's eight facings (the NPCs turn to face the captain).
+CELLS = [f'{who}-{d}' for who in ['captain', *NPCS] for d in WALK]
 import re
 # Exact names only: 'south' must not pick up 'south-east' frames.
 walk = {d: sorted((p for p in (root / 'art/pixellab/walk').glob('captain-*.png') if re.fullmatch(f'captain-{d}-\\d+', p.stem)), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for d in WALK}
+# NPC breathing loops (PixelLab breathing-idle, south) follow the walk rows, from art/pixellab/anim/.
+anim = {f'{n}-breathe': sorted((root / 'art/pixellab/anim').glob(f'{n}-breathe-*.png'), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for n in NPCS}
 cols = max(len(CELLS), *(len(v) for v in walk.values()))
-atlas = Image.new('RGBA', (48 * cols, 48 * (1 + len(WALK))), (0, 0, 0, 0))
+atlas = Image.new('RGBA', (48 * cols, 48 * (1 + len(WALK) + len(anim))), (0, 0, 0, 0))
 for i, name in enumerate(CELLS): atlas.paste(Image.open(out / (name + '.png')), (48 * i, 0))
 for r, d in enumerate(WALK, 1):
     for i, f in enumerate(walk[d]): atlas.paste(Image.open(f), (48 * i, 48 * r))
+for r, (name, frames) in enumerate(anim.items(), 1 + len(WALK)):
+    for i, f in enumerate(frames): atlas.paste(Image.open(f), (48 * i, 48 * r))
 atlas.save(root / 'dist/assets/siam-cast.png')
-(root / 'dist/assets/siam-cast.json').write_text(json.dumps({'cell': 48, 'columns': cols, 'rows': 1 + len(WALK), 'idle': CELLS, 'walk': {d: {'row': r, 'frames': len(walk[d])} for r, d in enumerate(WALK, 1)}}, indent=1) + '\n')
+(root / 'dist/assets/siam-cast.json').write_text(json.dumps({'cell': 48, 'columns': cols, 'rows': 1 + len(WALK) + len(anim), 'idle': CELLS, 'walk': {d: {'row': r, 'frames': len(walk[d])} for r, d in enumerate(WALK, 1)}, 'anim': {n: {'row': r, 'frames': len(f)} for r, (n, f) in enumerate(anim.items(), 1 + len(WALK))}}, indent=1) + '\n')
 print('wrote dist/assets/siam-cast.png and siam-cast.json')

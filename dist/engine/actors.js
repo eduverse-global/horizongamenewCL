@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import {POINTS,SPEED,DASH,onLanding} from './courtyard-state.js';
+import {POINTS,SPEED,DASH,onLanding,faceToward} from './courtyard-state.js';
 // PixelLab cast atlas (art/pixellab): row 0 holds idle cells (the captain's eight facings, then the NPCs),
 // the other rows the captain's walk cycles; siam-cast.json names each idle column and gives each walk row's frame count.
 // SIZE follows HD-2D scale: characters large relative to buildings (door about 1.4x character height).
-const FACING={down:'south',left:'west',right:'east',up:'north','down-right':'south-east','up-right':'north-east','up-left':'north-west','down-left':'south-west'},NPC={official:'official-south',merchant:'merchant-south',innkeeper:'innkeeper-south'},SIZE=2.1;
+const FACING={down:'south',left:'west',right:'east',up:'north','down-right':'south-east','up-right':'north-east','up-left':'north-west','down-left':'south-west'},NPC=['official','merchant','innkeeper'],SIZE=2.1;
 // One full walk cycle (both steps) per 2 m walked: about 10 frames a second at walking speed, and the feet do not slide.
 const CYCLE=2;
 export async function createActors(scene){
@@ -21,8 +21,15 @@ export async function createActors(scene){
  const player=actor(column('captain-south'),0,0);
  // A soft warm light carried with the player, as Octopath does, so the hero reads in dim areas.
  const glow=new THREE.PointLight('#ffd9a8',1.2,4.5,2);scene.add(glow);let walked=0;const forward=new THREE.Vector3();
- const npcs=POINTS.filter(p=>p.id in NPC).map(p=>({...actor(column(NPC[p.id]),p.x,p.z),id:p.id}));
- function update(s,moving,time,camera,dt=1/60){
+ // NPCs rest facing the camera and breathe (PixelLab breathing-idle), each loop out of step; while talking they turn
+ // to face the captain, and turn back a moment after the conversation ends.
+ const npcs=POINTS.filter(p=>NPC.includes(p.id)).map((p,i)=>({...actor(column(p.id+'-south'),p.x,p.z),id:p.id,x:p.x,z:p.z,facing:'down',until:0,phase:i*.37}));
+ let clock=0;
+ function faceCaptain(id,s){const n=npcs.find(n=>n.id===id);if(!n)return;const probe={x:n.x,z:n.z,facing:n.facing};faceToward(probe,s);n.facing=probe.facing;n.until=Infinity;}
+ function release(id){const n=npcs.find(n=>n.id===id);if(n&&n.until===Infinity)n.until=clock+1.2;}
+ function update(s,moving,time,camera,dt=1/60){clock=time;
+ for(const n of npcs){if(n.facing!=='down'&&time>n.until)n.facing='down';const breathe=layout.anim?.[n.id+'-breathe'];
+  if(n.facing==='down'&&breathe?.frames)cell(n.texture,Math.floor((time/.3+n.phase*breathe.frames))%breathe.frames,breathe.row);else cell(n.texture,column(n.id+'-'+FACING[n.facing]),0);}
  const walk=layout.walk[FACING[s.facing]];
  if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
  else{walked=0;cell(player.texture,column('captain-'+FACING[s.facing]),0);}
@@ -33,5 +40,5 @@ export async function createActors(scene){
  camera.getWorldDirection(forward);const yaw=Math.atan2(-forward.x,-forward.z),tall=SIZE/Math.max(.5,Math.cos(Math.asin(-forward.y)));
  for(const a of[player,...npcs]){a.mesh.rotation.y=yaw;a.mesh.scale.y=tall;}
  }
- return{player,npcs,update};
+ return{player,npcs,update,faceCaptain,release};
 }
