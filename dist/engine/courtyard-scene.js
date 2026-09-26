@@ -101,6 +101,42 @@ export async function createCourtyard(scene){
  // Mooring platform and rope bollards.
  for(let i=0;i<22;i++)box(9.4+i*.22,.03,1,.21,.14,3.2,wood);for(const z of[-.45,2.45])box(11.75,-.12,z,4.8,.16,.16,dark);
  for(const x of[10.8,13.8])for(const z of[-.5,2.5]){mesh(new THREE.CylinderGeometry(.1,.13,1,8),dark,x,.18,z);}
+ // The captain's junk, moored along the north side of the landing: a flat-transom hull with a raised stern (toward the
+ // bank) and a stern castle, painted sides with the bow eye, two masts with battened lug sails of matting, a red pennant,
+ // mooring lines to the bollards, a gangway, and Mae Im's jasmine at the bow.
+ {const L=8.6,B=2.5,H=1.25,X=15.2,Z=-2.25,Y=-.23,deck=u=>Y+H/2+1.0*(1-u)**3+.45*u*u;
+  const hullGeo=new THREE.BoxGeometry(L,H,B,24,3,6),pos=hullGeo.attributes.position;
+  for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),u=x/L+.5,t=y/H+.5,beam=.6+.4*Math.sin(Math.PI*Math.min(1,Math.max(0,u*1.04-.02)))**.5;
+   pos.setXYZ(i,x,y+t*(1.0*(1-u)**3+.45*u*u)+(1-t)*.3*(2*u-1)**2,z*beam*(.5+.5*t));}
+  hullGeo.computeVertexNormals();
+  // Side planking: dark hull, red and cream bands under the rail, the painted eye near the bow. The far side is mirrored.
+  const side=document.createElement('canvas');side.width=512;side.height=64;const c=side.getContext('2d');
+  c.fillStyle='#3d2b1d';c.fillRect(0,0,512,64);c.strokeStyle='#2a1d13';c.lineWidth=1;for(let y=16;y<64;y+=6){c.beginPath();c.moveTo(0,y);c.lineTo(512,y);c.stroke();}
+  c.fillStyle='#8f2a1c';c.fillRect(0,0,512,9);c.fillStyle='#e2d4b0';c.fillRect(0,9,512,3);c.fillStyle='#8f2a1c';c.fillRect(0,12,512,2);
+  c.fillStyle='#efe6cc';c.beginPath();c.ellipse(470,24,14,8,0,0,7);c.fill();c.fillStyle='#16110c';c.beginPath();c.arc(474,24,5,0,7);c.fill();
+  const sideTex=new THREE.CanvasTexture(side);sideTex.colorSpace=THREE.SRGBColorSpace;const farTex=sideTex.clone();farTex.wrapS=THREE.RepeatWrapping;farTex.repeat.x=-1;farTex.needsUpdate=true;
+  const red=mat('#8f2a1c'),hull=mesh(hullGeo,[red,red,mat('#8a6a45'),dark,mat('#ffffff',{map:sideTex}),mat('#ffffff',{map:farTex})],X,Y,Z,true);hull.receiveShadow=true;
+  const at=u=>X-L/2+u*L;
+  // Stern castle with an overhanging roof.
+  box(at(.1),deck(.1)+.35,Z,1.5,.9,1.8,red);box(at(.1),deck(.1)+.86,Z,1.8,.12,2.15,dark);box(at(.1)+.76,deck(.1)+.35,Z,.04,.5,.9,mat('#d9b56b'));
+  // Masts (the foremast raked forward) and battened lug sails, shaped longer aft of the mast as on Siamese junks.
+  // Sails of woven matting (ShapeGeometry UVs are in metres, so the weave tiles once per metre), hoisted part-way at the mooring.
+  const mat2=document.createElement('canvas');mat2.width=mat2.height=32;const w2=mat2.getContext('2d');w2.fillStyle='#b98a55';w2.fillRect(0,0,32,32);
+  for(let i=0;i<32;i+=4){w2.fillStyle=i%8?'#a67646':'#c89a62';w2.fillRect(i,0,2,32);w2.fillStyle='#9b6c3f40';w2.fillRect(0,i+1,32,1);}
+  const weave=new THREE.CanvasTexture(mat2);weave.colorSpace=THREE.SRGBColorSpace;weave.wrapS=weave.wrapT=THREE.RepeatWrapping;weave.magFilter=THREE.NearestFilter;
+  const sail=mat('#ffffff',{map:weave,side:THREE.DoubleSide}),rake=new THREE.CylinderGeometry(.06,.1,5.2,8);rake.rotateZ(-.12);
+  mesh(new THREE.CylinderGeometry(.07,.11,7.6,8),dark,at(.55),deck(.55)+3.8,Z);mesh(rake,dark,at(.86)+.3,deck(.86)+2.6,Z);
+  function lug(mx,base,w,h,scale){const g=new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-w*.72,0),new THREE.Vector2(w*.28,0),new THREE.Vector2(w*.24,h),new THREE.Vector2(-w*.76,h*.84)]));
+   mesh(g,sail,mx,base,Z+.14);for(let k=0;k<=5;k++){const f=k/5;mesh(new THREE.BoxGeometry(w*(1+.04*f)*1.02,.05*scale,.05),dark,mx-w*.24-w*.02*f,base+h*(k<5?f:.92),Z+.17);}}
+  lug(at(.55),deck(.55)+1.7,3.8,3.3,1);lug(at(.86)+.35,deck(.86)+1.3,2.4,2.3,.8);
+  const pennant=new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0,0),new THREE.Vector2(-1.1,-.18),new THREE.Vector2(0,-.4)]));mesh(pennant,mat('#b3261c',{side:THREE.DoubleSide}),at(.55),deck(.55)+7.6,Z);
+  // Mooring lines from the rail to the landing's bollards, and the gangway down to the planks.
+  const ropeMat=mat('#8d7650'),up=new THREE.Vector3(0,1,0);
+  for(const[a,b]of[[[at(.2),deck(.2)-.1,Z+1],[10.8,.66,-.5]],[[at(.62),deck(.62)-.1,Z+1.15],[13.8,.66,-.5]]]){const A=new THREE.Vector3(...a),Bv=new THREE.Vector3(...b),g=new THREE.CylinderGeometry(.02,.02,A.distanceTo(Bv),5);g.rotateX(Math.PI/2);g.applyMatrix4(new THREE.Matrix4().lookAt(A,Bv,up));const m=A.clone().add(Bv).multiplyScalar(.5);mesh(g,ropeMat,m.x,m.y,m.z);}
+  const plank=new THREE.BoxGeometry(.6,.06,1.05);plank.rotateX(.62);mesh(plank,wood,at(.3),(deck(.3)+.12)/2,-.78);
+  // Jasmine for Mae Ya Nang, the boat spirit, tied at the bow.
+  const garland=new THREE.TorusGeometry(.2,.05,6,14);garland.rotateY(Math.PI/2);mesh(garland,mat('#f4f0e2',{emissive:'#403c30'}),at(1)-.08,deck(1)-.12,Z);
+ }
  // Lush canopy texture is original canvas artwork, instanced as crossed leaf clusters.
  const leafCanvas=document.createElement('canvas');leafCanvas.width=leafCanvas.height=128;const ctx=leafCanvas.getContext('2d');
  for(let i=0;i<75;i++){const a=rand()*Math.PI*2,r=Math.sqrt(rand())*48,x=64+Math.cos(a)*r,y=64+Math.sin(a)*r;ctx.fillStyle=['#416944','#618249','#7b9552','#95aa66'][i%4];ctx.beginPath();ctx.ellipse(x,y,4+rand()*7,2+rand()*4,a,0,7);ctx.fill();}

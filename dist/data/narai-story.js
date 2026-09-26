@@ -85,3 +85,42 @@ export function quayLine(id, visit, lang) {
   const n = Math.max(0, Math.floor(visit) || 0);
   return text(n === 0 ? who.greet : who.lines[(n - 1) % who.lines.length], lang);
 }
+
+// The opening chapter at the Ayutthaya landing, 1 January 1682. This text is new to this repo (not from Horinzonnext)
+// and its Thai needs review. The envoys' route follows the record: from Siam to Bantam, then on the French company's
+// Soleil d'Orient for the Cape; the ship was lost off Madagascar late in 1681, which Ayutthaya does not yet know.
+export const OPENING = {
+  card: {
+    place: { en: 'Ayutthaya', th: 'กรุงศรีอยุธยา' },
+    date: { en: '1 January 1682', th: '1 มกราคม พ.ศ. 2225' },
+    line: { en: 'A junk of the Phra Khlang comes home on the morning tide.', th: 'สำเภาของพระคลังกลับถึงท่าพร้อมน้ำขึ้นยามเช้า' }
+  },
+  // Arrival cutscene: the captain steps off the landing; Mae Im greets him, then Khun Phithak Wari calls him over.
+  arrival: [
+    { who: 'innkeeper', en: 'You came in on the morning tide, captain! I tied jasmine at your bow for Mae Ya Nang. She brought you safely over the bar, so be kind to her.', th: 'ท่านมากับน้ำขึ้นยามเช้าเชียวนายสำเภา ข้าผูกพวงมะลิไว้ที่หัวเรือให้แม่ย่านางแล้ว นางพาท่านข้ามสันดอนมาได้โดยปลอดภัย อย่าลืมบุญคุณนางเล่า' },
+    { who: 'captain', en: 'Then I owe her a garland of my own. Is the Krom Tha awake this early?', th: 'ถ้าเช่นนั้นข้าคงต้องถวายมาลัยให้นางสักพวง กรมท่าตื่นแต่เช้าเพียงนี้แล้วหรือ' },
+    { who: 'official', en: 'The Krom Tha never sleeps, captain! Come to the trading court, if you please. There is news, and the Phra Khlang wants your ears before your crew scatter to the markets.', th: 'กรมท่าไม่เคยหลับใหลหรอกนายสำเภา เชิญมาที่ลานค้าขายก่อนเถิด มีข่าวมา และพระคลังอยากให้ท่านได้ฟังก่อนลูกเรือจะแยกย้ายกันไปตามตลาด' }
+  ],
+  // Khun Phithak Wari's briefing: the quay greeting, the silence since Bantam, and the first task.
+  brief: [
+    { en: 'Welcome ashore, captain. The Krom Tha keeps this landing for the Phra Khlang: water, rice, a carpenter for your hull, and the port dues are settled here.', th: 'ยินดีต้อนรับขึ้นฝั่ง นายสำเภา กรมท่าดูแลท่าน้ำนี้ให้พระคลัง ทั้งน้ำจืด ข้าวสาร ช่างไม้ซ่อมเรือ และค่าธรรมเนียมปากเรือก็ชำระกันที่นี่' },
+    { en: 'But the dues can wait a morning. You have heard? The ship that carried our envoys to France has not been heard of since Bantam. Months of silence. The court waits and prays, and the Phra Khlang asks every captain who comes up the river for word.', th: 'แต่ค่าธรรมเนียมรอได้สักเช้าหนึ่ง ท่านได้ยินข่าวแล้วหรือยัง เรือที่พาราชทูตของเราไปฝรั่งเศสไม่มีข่าวคราวเลยนับแต่ออกจากเมืองบันตัม เงียบหายมาหลายเดือนแล้ว ราชสำนักยังรอคอยและภาวนา พระคลังจึงถามข่าวจากนายสำเภาทุกคนที่ขึ้นมาตามลำน้ำ' },
+    { en: 'Tan Heng trades with every junk from the south, and Mae Im’s lodge hears every sailor’s tale. The envoys’ manifest lies in the merchant’s pavilion, among the Phra Khlang’s ledgers. Read what the ship carried, ask what the river knows, and bring it to me.', th: 'ตันเฮงค้าขายกับสำเภาทุกลำที่มาจากทางใต้ ส่วนเรือนพักของแม่อิ่มก็ได้ยินเรื่องเล่าของลูกเรือทุกคน บัญชีเรือราชทูตอยู่ในเรือนพ่อค้า ปะปนกับสมุดบัญชีของพระคลัง จงอ่านดูว่าเรือบรรทุกสิ่งใดไป ถามดูว่าสายน้ำรู้อะไรบ้าง แล้วนำมาบอกข้า' }
+  ],
+  // Three sources of word, in any order.
+  word: {
+    merchant: { en: 'The French company’s ship? A junk from Batavia came in at the new moon. Her master says the ship took on water and pepper at Bantam and sailed west for the Cape, late in the season and heavy with the King’s gifts. Nobody has sighted her since.', th: 'เรือของบริษัทฝรั่งเศสน่ะหรือ สำเภาจากปัตตาเวียเข้าท่ามาเมื่อคืนเดือนดับ นายสำเภาลำนั้นว่าเรือฝรั่งเศสขนน้ำจืดกับพริกไทยขึ้นที่บันตัม แล้วแล่นไปทางตะวันตกมุ่งแหลมกู๊ดโฮป ออกเรือช้ากว่าฤดูทั้งยังบรรทุกเครื่องราชบรรณาการมาเต็มลำ ตั้งแต่นั้นก็ไม่มีใครเห็นเรือลำนั้นอีกเลย' },
+    innkeeper: { en: 'A sailor from Bantam slept here last month. He said the storms in the southern ocean were the worst anyone could remember, and Dutch ships limped in with their masts cut away. He would say no more. He tied a sacred thread on his wrist and went to the temple at dawn.', th: 'เดือนก่อนมีลูกเรือจากบันตัมมาพักที่นี่ เขาว่าพายุในทะเลใต้ปีนี้ร้ายที่สุดเท่าที่ใครจะจำได้ เรือฮอลันดากลับเข้าท่ามาทั้งที่เสากระโดงถูกตัดทิ้ง เขาไม่ยอมเล่าอะไรต่ออีก ผูกสายสิญจน์ไว้ที่ข้อมือ แล้วไปวัดตั้งแต่เช้ามืด' },
+    ledger: { en: 'The Phra Khlang’s manifest for the envoys’ voyage: gifts for the King of France and his court, lacquered cabinets, porcelain, gold and silver work and fine cloth, page after page. The last entry is in a factor’s hand: “Transferred at Bantam to the French company’s ship, bound for the Cape of Good Hope.”', th: 'บัญชีสินค้าของพระคลังสำหรับการเดินทางของคณะราชทูต เครื่องราชบรรณาการถวายพระเจ้ากรุงฝรั่งเศสและราชสำนัก ทั้งตู้ลงรัก เครื่องกระเบื้อง เครื่องทองเครื่องเงิน และผ้าเนื้อดี เรียงรายหลายหน้า รายการสุดท้ายเป็นลายมือเจ้าพนักงานว่า “ย้ายขึ้นเรือของบริษัทฝรั่งเศสที่เมืองบันตัม มุ่งหน้าไปแหลมกู๊ดโฮป”' }
+  },
+  // The report to Khun Phithak Wari, and how the captain chooses to carry the news to the Phra Khlang.
+  report: [
+    { en: 'West for the Cape, late in the season, into storms that cut the masts from Dutch ships. You and I can both read that sky, captain.', th: 'ไปทางตะวันตกมุ่งแหลมกู๊ดโฮป ออกเรือช้ากว่าฤดู เข้าไปในพายุที่ทำให้เรือฮอลันดาต้องตัดเสากระโดงทิ้ง ท่านกับข้าต่างก็อ่านฟ้าเช่นนั้นออกดีนายสำเภา' },
+    { en: 'The Phra Khlang will hear it from you before noon. How will you tell him?', th: 'พระคลังจะได้ฟังเรื่องนี้จากปากท่านก่อนเที่ยง ท่านจะกราบเรียนท่านอย่างไร' }
+  ],
+  choices: {
+    tell: { label: { en: 'Plainly: the ship is most likely lost.', th: 'ตามตรง: เรือลำนั้นน่าจะอับปางแล้ว' }, reply: { en: 'Hard words, but true ones are the only kind worth carrying to the palace. The Phra Khlang will remember who brought them.', th: 'เป็นถ้อยคำที่หนักนัก แต่มีเพียงความจริงเท่านั้นที่ควรนำขึ้นไปถึงวัง พระคลังจะจดจำว่าใครเป็นผู้นำความมา' } },
+    hope: { label: { en: 'Gently: there is no word yet, and the sea keeps its own time.', th: 'อย่างนุ่มนวล: ยังไม่มีข่าว และทะเลก็มีเวลาของมันเอง' }, reply: { en: 'Mercy, then. Let the court hope a little longer. But the Phra Khlang will send to Bantam for certain word, and he will want a captain who can carry it.', th: 'ถ้าเช่นนั้นก็ด้วยความเมตตา ให้ราชสำนักได้หวังต่ออีกสักหน่อย แต่พระคลังจะส่งคนไปบันตัมเพื่อสืบข่าวให้แน่ชัด และท่านจะต้องการนายสำเภาที่นำข่าวนั้นกลับมาได้' } }
+  },
+  sail: { en: 'Your hold is cleared and your dues are written. The river is yours until the south-west wind. Go aboard when you are ready, captain; the sea will not wait for either of us.', th: 'ระวางเรือของท่านตรวจเรียบร้อย ค่าธรรมเนียมก็ลงบัญชีแล้ว แม่น้ำเป็นของท่านจนกว่าลมตะวันตกเฉียงใต้จะมา พร้อมเมื่อใดก็ขึ้นเรือเถิดนายสำเภา ทะเลไม่รอใครทั้งท่านและข้า' }
+};

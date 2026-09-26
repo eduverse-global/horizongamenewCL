@@ -80,10 +80,19 @@ The tactical escort prototype (`/combat.html`) already uses "Niran's escort" and
 
 ## 6. Status and next steps
 
-Done: `QUAY_CAST` is in the courtyard with PixelLab sprites (8 facings, walk cycles for the captain), layered Gemini portraits graded to the scene, and EN/TH dialogue. The courtyard quest is still a placeholder errand (the ledger).
+Done:
+- `QUAY_CAST` is in the courtyard with PixelLab sprites (8 facings, walk cycles for the captain), layered Gemini portraits graded to the scene, and EN/TH dialogue.
+- The **1 January 1682 opening** (`OPENING` in `narai-story.js`, described in `docs/engine/COURTYARD.md`) replaces the placeholder ledger errand:
+  - an arrival cutscene
+  - the Krom Tha briefing on the envoys' ship silent since Bantam
+  - word gathered from Tan Heng, Mae Im and the envoys' manifest
+  - a saved choice of how to tell the Phra Khlang (`tell` or `hope`)
+  - boarding the junk for the sea
+
+  The rumours stay consistent with the record, and the court does not yet know the ship is lost.
 
 Next:
-1. Replace the placeholder with the **1 January 1682 opening** at the Ayutthaya landing: the captain arrives, the Krom Tha official receives him, news of the lost envoy ship hangs over the court, and the captain's first task points toward the sea. Include a first short cutscene.
-2. Connect the courtyard to the sailing game with one shared save.
+1. Seek Thai review of the new opening text, as for the timeline and leads.
+2. Connect the courtyard to the sailing game with one shared save, carrying the opening choice.
 3. Build toward the 1685 Letter chapter (Niran and Mali, the Bang Kok district, the river route, the escort battle).
 4. Seek Thai review of the new Thai text for the timeline and leads in `narai-story.js`. The quay cast Thai comes unchanged from Horinzonnext.

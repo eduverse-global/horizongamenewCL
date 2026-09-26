@@ -40,8 +40,12 @@ CELLS = [f'{who}-{d}' for who in ['captain', *NPCS] for d in WALK]
 import re
 # Exact names only: 'south' must not pick up 'south-east' frames.
 walk = {d: sorted((p for p in (root / 'art/pixellab/walk').glob('captain-*.png') if re.fullmatch(f'captain-{d}-\\d+', p.stem)), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for d in WALK}
-# NPC breathing loops (PixelLab breathing-idle, south) follow the walk rows, from art/pixellab/anim/.
-anim = {f'{n}-breathe': sorted((root / 'art/pixellab/anim').glob(f'{n}-breathe-*.png'), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for n in NPCS}
+# Special animations follow the walk rows, one row each, from art/pixellab/anim/<who>-<name>-<frame>.png: the NPC
+# breathing loops (south) first, then event animations such as Mae Im's garland offering (east), in name order.
+groups = {}
+for f in (root / 'art/pixellab/anim').glob('*.png'): groups.setdefault(f.stem.rsplit('-', 1)[0], []).append(f)
+order = [f'{n}-breathe' for n in NPCS] + sorted(g for g in groups if not g.endswith('-breathe'))
+anim = {name: sorted(groups[name], key=lambda p: int(p.stem.rsplit('-', 1)[1])) for name in order if name in groups}
 cols = max(len(CELLS), *(len(v) for v in walk.values()))
 atlas = Image.new('RGBA', (48 * cols, 48 * (1 + len(WALK) + len(anim))), (0, 0, 0, 0))
 for i, name in enumerate(CELLS): atlas.paste(Image.open(out / (name + '.png')), (48 * i, 0))

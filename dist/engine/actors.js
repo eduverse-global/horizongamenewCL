@@ -28,10 +28,18 @@ export async function createActors(scene){
  // to face the captain, and turn back a moment after the conversation ends.
  const npcs=POINTS.filter(p=>NPC.includes(p.id)).map((p,i)=>({...actor(column(p.id+'-south'),p.x,p.z),id:p.id,x:p.x,z:p.z,facing:'down',until:0,phase:i*.37}));
  let clock=0;
+ // Special-event animations (layout.anim, named <who>-<action>-<direction>, e.g. 'official-wai-east'): play() runs the
+// one for the character's current facing once and resolves when it ends (at once if there is none for that facing);
+// the character then returns to its facing cell. stop() cuts every animation short, as when a cutscene is skipped.
+ const playing=new Map();
+ function play(id,action,fps=7){const n=npcs.find(n=>n.id===id),a=n&&layout.anim?.[`${id}-${action}-${FACING[n.facing]}`];if(!a?.frames)return Promise.resolve();
+  return new Promise(done=>{playing.get(id)?.done();playing.set(id,{a,start:clock,fps,done});});}
+ function stop(){for(const p of playing.values())p.done();playing.clear();}
  function faceCaptain(id,s){const n=npcs.find(n=>n.id===id);if(!n)return;const probe={x:n.x,z:n.z,facing:n.facing};faceToward(probe,s);n.facing=probe.facing;n.until=Infinity;}
  function release(id){const n=npcs.find(n=>n.id===id);if(n&&n.until===Infinity)n.until=clock+1.2;}
  function update(s,moving,time,camera,dt=1/60){clock=time;
  for(const n of npcs){if(n.facing!=='down'&&time>n.until)n.facing='down';const breathe=BREATHES.has(n.id)&&layout.anim?.[n.id+'-breathe'];
+  const p=playing.get(n.id);if(p){const f=Math.floor((time-p.start)*p.fps);if(f<p.a.frames){cell(n.texture,f,p.a.row);continue;}playing.delete(n.id);p.done();}
   if(n.facing==='down'&&breathe?.frames)cell(n.texture,Math.floor((time/.3+n.phase*breathe.frames))%breathe.frames,breathe.row);else cell(n.texture,column(n.id+'-'+FACING[n.facing]),0);}
  const walk=layout.walk[FACING[s.facing]];
  if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
@@ -43,5 +51,5 @@ export async function createActors(scene){
  camera.getWorldDirection(forward);const yaw=Math.atan2(-forward.x,-forward.z),tall=SIZE/Math.max(.5,Math.cos(Math.asin(-forward.y)));
  for(const a of[player,...npcs]){a.mesh.rotation.y=yaw;a.mesh.scale.y=tall;}
  }
- return{player,npcs,update,faceCaptain,release};
+ return{player,npcs,update,faceCaptain,release,play,stop};
 }

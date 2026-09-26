@@ -22,6 +22,10 @@ STYLE_REF = root / 'art/portraits/style/pixel-painted.png'
 SETTING = 'Ayutthaya, Siam, in the 1680s; period-appropriate and respectful.'
 
 CHARACTERS = {
+    'captain': ('captain-south',
+                'The Thai captain, a young Siamese sea captain of the Phra Khlang\'s royal trade fleet in his mid twenties: mahadthai haircut '
+                '(short on top, shaved sides), deep red fitted jacket with gold buttons, white sash, a sword hilt at the hip; determined, kind, '
+                'weathered by the sea.'),
     'innkeeper': ('innkeeper-south',
                   'Mae Im, a young Siamese woman in her early twenties who keeps a riverside lodge: youthful, lively face with a '
                   'playful smile, bright dark eyes, short black hair cropped in the Ayutthaya style, small gold earrings, green '

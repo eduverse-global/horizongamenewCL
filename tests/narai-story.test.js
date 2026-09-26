@@ -1,9 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {SETTING,TIMELINE,LEADS,QUAY_CAST,buddhistYear,quayLine,text} from '../dist/data/narai-story.js';
+import {SETTING,TIMELINE,LEADS,QUAY_CAST,OPENING,buddhistYear,quayLine,text} from '../dist/data/narai-story.js';
 const pairs=[];const walk=v=>{if(v&&typeof v==='object'){if('en'in v||'th'in v)pairs.push(v);else Object.values(v).forEach(walk);}};
-walk({SETTING,TIMELINE:TIMELINE.map(({en,th})=>({en,th})),LEADS,QUAY_CAST});
+walk({SETTING,TIMELINE:TIMELINE.map(({en,th})=>({en,th})),LEADS,QUAY_CAST,OPENING});
 test('every story string exists in English and Thai',()=>{assert.ok(pairs.length>40);for(const p of pairs){assert.ok(p.en?.trim(),JSON.stringify(p));assert.match(p.th??'',/[฀-๿]/,p.en);}});
 test('the historical spine is chronological and starts before the 1682 opening',()=>{const key=e=>e.year*400+(e.month??0)*32+(e.day??0);for(let i=1;i<TIMELINE.length;i++)assert.ok(key(TIMELINE[i-1])<=key(TIMELINE[i]),TIMELINE[i].id);assert.ok(TIMELINE[0].year<SETTING.start.year);assert.equal(new Set(TIMELINE.map(e=>e.id)).size,TIMELINE.length);assert.ok(TIMELINE.some(e=>e.id==='versailles'&&e.year===1686&&e.month===9&&e.day===1));});
 test('the opening year reads as พ.ศ. 2225 in Thai',()=>{assert.equal(buddhistYear(1682),2225);assert.ok(SETTING.subtitle.th.includes('2225'));});
 test('five leads, the Thai captain first',()=>{assert.equal(LEADS.length,5);assert.equal(LEADS[0].id,'captain');});
 test('quay conversations open with the greeting, then cycle four lines',()=>{for(const id of['harbour_official','junk_merchant','innkeeper']){const c=QUAY_CAST[id];assert.equal(c.lines.length,4);assert.equal(quayLine(id,0,'th'),c.greet.th);assert.equal(quayLine(id,1,'en'),c.lines[0].en);assert.equal(quayLine(id,5,'en'),c.lines[0].en);assert.equal(quayLine(id,-3,'en'),c.greet.en);}assert.equal(quayLine('captain',0,'en'),'');assert.equal(quayLine('nobody',0,'en'),'');assert.equal(text({en:'x'},'th'),'x');});
+test('the opening chapter has its cutscene cast, three sources, two choices, and the Buddhist Era on the title card',()=>{assert.deepEqual(OPENING.arrival.map(l=>l.who),['innkeeper','captain','official']);assert.deepEqual(Object.keys(OPENING.word).sort(),['innkeeper','ledger','merchant']);assert.deepEqual(Object.keys(OPENING.choices),['tell','hope']);assert.equal(OPENING.brief[0].en,QUAY_CAST.harbour_official.greet.en);assert.ok(OPENING.card.date.th.includes(String(buddhistYear(SETTING.start.year))));});

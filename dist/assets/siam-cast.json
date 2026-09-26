@@ -1,7 +1,7 @@
 {
  "cell": 48,
  "columns": 32,
- "rows": 12,
+ "rows": 14,
  "idle": [
   "captain-south",
   "captain-west",
@@ -82,6 +82,14 @@
   "innkeeper-breathe": {
    "row": 11,
    "frames": 4
+  },
+  "innkeeper-garland-east": {
+   "row": 12,
+   "frames": 9
+  },
+  "official-wai-east": {
+   "row": 13,
+   "frames": 9
   }
  }
 }

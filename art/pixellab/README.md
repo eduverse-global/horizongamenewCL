@@ -33,3 +33,12 @@ Khun Phithak Wari, Tan Heng and Mae Im use all 8 of their PixelLab rotations, so
 
 After playtesting, breathing was switched off for Khun Phithak Wari and Tan Heng (`BREATHES` in `dist/engine/actors.js`): their breathing frames are 3-4 px shorter than their standing sprites and looked shrunken. Mae Im keeps hers, since her frames match her standing size. The frames remain in the atlas.
 Later Mae Im's breathing was switched off as well, so all characters stand still at rest. The breathing rows remain in the atlas for cutscenes and special events.
+
+## Special-event animations
+
+For the 1682 opening, both in v3 mode, facing east (toward the captain in the cutscene), 1 generation each:
+- Khun Phithak Wari's wai: he bows with palms pressed together, then straightens up. Frames 1-8 are used, holding the deepest bow for one extra frame.
+- Mae Im's garland offering. PixelLab turned her toward the camera and offered it to her left (west). Frames 2-8 are therefore mirrored, so she offers it toward the captain, with the arm held out for two extra frames.
+
+The frames came from the spritesheet endpoint (68 px cells, cropped to the centre 48 px). The reference frame matched the east rotation pixel for pixel. Files are `anim/<who>-<action>-<direction>-<n>.png`; the atlas gives each group a row (`siam-cast.json` → `anim`), and `actors.play()` picks the one for the current facing.
+

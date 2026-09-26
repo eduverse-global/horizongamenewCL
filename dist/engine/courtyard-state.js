@@ -6,7 +6,9 @@ export const POINTS=[
  {id:'innkeeper',x:6.6,z:.4},
  {id:'ledger',x:-2,z:-6.0},
  {id:'training',x:5.5,z:4.5},
- {id:'gate',x:-10,z:-3.0}
+ {id:'gate',x:-10,z:-3.0},
+ // The end of the river landing, where the captain's junk is moored.
+ {id:'junk',x:12.9,z:.9}
 ];
 // Architectural solids; the pavilion doorway is the gap x=-1.4..1.4.
 export const BLOCKS=[
@@ -18,8 +20,14 @@ export const inside=p=>p.z< -3.75&&p.z> -9.8&&Math.abs(p.x)<4.8;
 // The river landing (planks from x=9.4 to 14.1) extends the walkable ground over the water.
 export const onLanding=(x,z)=>x>9.3&&x<13.9&&z>-.3&&z<2.3;
 export function walkable(x,z){return(onLanding(x,z)||(x>-11.6&&x<9.7&&z>-10.6&&z<10.8))&&!BLOCKS.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2+.26&&Math.abs(z-bz)<d/2+.26);}
-export function fresh(){return{...START,quest:'meet',choice:null,room:false,v:0};}
-export function restore(value){const s=fresh();if(value&&['meet','ledger','return','complete'].includes(value.quest)){s.quest=value.quest;if(['share','keep'].includes(value.choice)&&s.quest==='complete')s.choice=value.choice;
+// The opening chapter (1 January 1682): report to the Krom Tha official, gather word of the envoys' ship from three
+// sources in any order, bring it back and choose how to tell the Phra Khlang, then go aboard. `opened` marks the
+// arrival cutscene as seen.
+export const QUESTS=['meet','word','return','complete'],SOURCES=['merchant','innkeeper','ledger'],CHOICES=['tell','hope'];
+export function fresh(){return{...START,quest:'meet',word:[],choice:null,opened:false,room:false,v:0};}
+export function restore(value){const s=fresh();if(value&&QUESTS.includes(value.quest)){s.quest=value.quest;s.opened=value.opened===true||s.quest!=='meet';
+ if(s.quest==='word'&&Array.isArray(value.word))s.word=SOURCES.filter(id=>value.word.includes(id));if(s.quest==='word'&&s.word.length===SOURCES.length)s.quest='return';
+ if(s.quest==='complete'){if(!CHOICES.includes(value.choice))s.quest='return';else s.choice=value.choice;}
  if(Number.isFinite(value.x)&&Number.isFinite(value.z)&&walkable(value.x,value.z)){s.x=value.x;s.z=value.z;s.room=inside(s);if(DIRS.includes(value.facing))s.facing=value.facing;}}return s;}
 // Free 8-way movement (as in HD-2D towns): diagonals are normalised, walls are slid along, and speed
 // eases in over ~80 ms. Facing follows the dominant axis, keeping the current one on exact diagonals.
@@ -53,9 +61,9 @@ export function move(s,dx,dz,dt,dash=false){
 export function nearest(s){return POINTS.map(p=>({...p,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
 export function act(s,id,choice){
  const p=POINTS.find(p=>p.id===id);if(!p||Math.hypot(p.x-s.x,p.z-s.z)>1.85)return false;
- if(id==='official'&&s.quest==='meet'){s.quest='ledger';return true;}
- if(id==='ledger'&&s.quest==='ledger'){s.quest='return';return true;}
- if(id==='official'&&s.quest==='return'&&['share','keep'].includes(choice)){s.quest='complete';s.choice=choice;return true;}
+ if(id==='official'&&s.quest==='meet'){s.quest='word';s.word=[];return true;}
+ if(s.quest==='word'&&SOURCES.includes(id)&&!s.word.includes(id)){s.word=[...s.word,id];if(s.word.length===SOURCES.length)s.quest='return';return true;}
+ if(id==='official'&&s.quest==='return'&&CHOICES.includes(choice)){s.quest='complete';s.choice=choice;return true;}
  return false;
 }
 // Grid routing (8 neighbours, no cutting past corners) follows the same movement and collision rules.

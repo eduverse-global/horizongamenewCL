@@ -9,7 +9,7 @@ The sailing game remains the root page. Its courtyard link opens this independen
 - Lit alpha-tested character planes using the project's existing original character atlases.
 - Four-direction keyboard/touch movement and cardinal pointer routes; collision data separate from rendering.
 - Enter the pavilion through the center doorway; roof and walls cut away inside.
-- EN/TH portrait conversation, inspectable ledger, and two saved narrative choices. Courtyard state uses `narai-courtyard-v1`; the main game save is untouched.
+- The 1682 opening chapter (below) with EN/TH portrait conversations and a saved narrative choice. Courtyard state uses `narai-courtyard-v2`; the main game save is untouched.
 - Day/evening transition, lantern lights, water, instanced vegetation and paving.
 - Practice target with a light/particle/arc effect and short synthesized audio cue.
 - Optional on-screen frame/draw/triangle statistics, resize support and context-loss recovery prompt.
@@ -31,9 +31,20 @@ Revised after playtest feedback (the close camera lost the diorama feel) and res
 - Grass blades are lit from above on both faces instead of rendering as dark spikes.
 
 ## Siam cast (PixelLab)
-- The player is the Thai captain from the Horinzonnext art test. Khun Phithak Wari (Krom Tha official) gives the ledger quest in Mara's place. Tan Heng (junk merchant) and Mae Im (river lodge) greet, then cycle their Horinzonnext lines from `dist/data/narai-story.js`.
-- Art: `dist/assets/siam-cast.png`, rebuilt from `art/pixellab/` (see its README). Dialogue portraits are painted Gemini portraits (`dist/assets/siam-portraits.jpg`, see `art/portraits/README.md`).
-- Saves keep the same `narai-courtyard-v1` format; only the quest giver's id changed.
+- The player is the Thai captain from the Horinzonnext art test. Tan Heng (junk merchant) and Mae Im (river lodge) greet, then cycle their Horinzonnext lines from `dist/data/narai-story.js`, except when they have news for the chapter.
+- Art: `dist/assets/siam-cast.png`, rebuilt from `art/pixellab/` (see its README). Dialogue portraits are layered Gemini portraits (`dist/assets/portraits/`, see `art/portraits/README.md`); the captain has one too.
+
+## Opening chapter: Ayutthaya, 1 January 1682
+Text in `OPENING` (`dist/data/narai-story.js`, EN/TH); rules in `courtyard-state.js`; staging in `courtyard.js`.
+1. **Arrival cutscene** (new game, or `/courtyard.html?opening` to replay it): letterbox and a title card (Ayutthaya · 1 January 1682 · พ.ศ. 2225). The captain steps off his junk and walks the landing; Mae Im turns and offers her jasmine garland, and Khun Phithak Wari calls him to the trading court. Skip with the button or Escape.
+2. **meet**: Khun Phithak Wari greets him with a wai and gives the briefing (port dues, then the envoys' ship silent since Bantam). The task is to gather word.
+3. **word**: three sources in any order. Tan Heng (a Batavia junk's news), Mae Im (a Bantam sailor's storms) and the envoys' manifest in the pavilion. The objective counts them (n/3); the marker points to the nearest one not yet heard.
+4. **return**: the report, and a choice of how to tell the Phra Khlang: plainly (`tell`) or gently (`hope`). The choice is saved for later chapters.
+5. **complete**: the marker points to the junk at the end of the landing; the helmsman asks "The tide is turning. Do we go aboard?" and boarding opens the sailing game.
+
+The moored junk is built in code (`courtyard-scene.js`): a flat-transom hull with sheer and a painted bow eye, a stern castle, two masts with battened lug sails of matting, a red pennant, mooring lines, a gangway and Mae Im's jasmine at the bow.
+
+Cutscene steps (`pause`, `walkTo`, `line`) are awaitable and driven by the frame loop; skipping resolves them all and applies the end state. Special-event animations play through `actors.play(id, action)`, only when the character faces the direction the frames were drawn for.
 
 ## Scope
 This is an original stylized visual prototype, not a historical reconstruction or a finished AAA art pass. The pilgrim gate introduces a future destination; it does not load another region. The practice effect is not yet connected to the tactical combat system. Camera framing, architecture and vegetation still need art iteration. Performance numbers must be measured on target devices; 60 fps is not a delivery guarantee.
