@@ -17,4 +17,9 @@ Mae Im was then redone in a pixel-painted style at the user's request. The style
 
 All three courtyard speakers (Khun Phithak Wari, Tan Heng, Mae Im) now use layered portraits, so the style no longer jumps between speakers. One colour grade, matched to the courtyard scene, is applied to every cut-out and backdrop (`grade()` in the script): slightly muted saturation, olive shadows and warm highlights, with backdrops darker and softer than characters. Each cut-out also has a dusk variant (`<id>-evening.png`): dimmer, cooler shadows and warm highlights. The dialogue box picks the variant that matches the scene's time of day. The earlier smooth painted atlas (`siam-portraits.jpg`) is now only a fallback.
 
-The captain has a layered portrait too (`captain.png` and `captain-evening.png`), for his lines in the opening cutscene. His sword hilt came out European in style; a Siamese *daab* hilt would be more accurate if the portrait is regenerated.
+The captain has a layered portrait too (`captain.png` and `captain-evening.png`), for his lines in the opening cutscene. It was regenerated after playtesting:
+- lighter skin to match his sprite
+- gold embroidery on the collar and front, gold buttons and cuff trim
+- a straight, cord-wrapped *daab* hilt in place of a European-style sabre
+
+The cut-out's edge clean-up now pulls any magenta spill back toward neutral.

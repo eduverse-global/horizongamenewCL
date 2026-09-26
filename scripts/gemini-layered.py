@@ -23,9 +23,11 @@ SETTING = 'Ayutthaya, Siam, in the 1680s; period-appropriate and respectful.'
 
 CHARACTERS = {
     'captain': ('captain-south',
-                'The Thai captain, a young Siamese sea captain of the Phra Khlang\'s royal trade fleet in his mid twenties: mahadthai haircut '
-                '(short on top, shaved sides), deep red fitted jacket with gold buttons, white sash, a sword hilt at the hip; determined, kind, '
-                'weathered by the sea.'),
+                'The Thai captain, a young Siamese sea captain of the Phra Khlang\'s royal trade fleet in his mid twenties: light warm '
+                'golden-tan skin, as light as in the sprite (not dark), face well lit, clean-shaven, black mahadthai haircut (short on top, '
+                'shaved sides), deep red fitted jacket with a high collar, rich gold embroidery on the collar and down the front opening, '
+                'gold buttons and gold trim at the cuffs, a white sash, the straight cord-wrapped wooden hilt of a Siamese daab '
+                'sword at the hip (no knuckle guard, not a European sabre); determined and kind.'),
     'innkeeper': ('innkeeper-south',
                   'Mae Im, a young Siamese woman in her early twenties who keeps a riverside lodge: youthful, lively face with a '
                   'playful smile, bright dark eyes, short black hair cropped in the Ayutthaya style, small gold earrings, green '
@@ -92,7 +94,8 @@ def cutout(img, size):
     for y in range(cut.height):
         for x in range(cut.width):
             r, g, b, a = px[x, y]
-            if a and r > g * 1.35 and b > g * 1.35: px[x, y] = (g, g, g, a) if abs(r - b) < 40 else (r, g, b, a)
+            # Magenta spill (red and blue both well above green) is pulled back toward the pixel's green level.
+            if a and r > g * 1.25 and b > g * 1.25: px[x, y] = (min(r, round(g * 1.15)), g, min(b, round(g * 1.1)), a)
     return cut
 
 def character(cid):

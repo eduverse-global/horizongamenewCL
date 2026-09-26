@@ -42,7 +42,13 @@ Text in `OPENING` (`dist/data/narai-story.js`, EN/TH); rules in `courtyard-state
 4. **return**: the report, and a choice of how to tell the Phra Khlang: plainly (`tell`) or gently (`hope`). The choice is saved for later chapters.
 5. **complete**: the marker points to the junk at the end of the landing; the helmsman asks "The tide is turning. Do we go aboard?" and boarding opens the sailing game.
 
-The moored junk is built in code (`courtyard-scene.js`): a flat-transom hull with sheer and a painted bow eye, a stern castle, two masts with battened lug sails of matting, a red pennant, mooring lines, a gangway and Mae Im's jasmine at the bow.
+The moored junk is built in code (`courtyard-scene.js`), after Siamese and Chinese trading junks of the 1680s:
+- **Hull:** a flat-transom hull with sheer and canvas-painted planking, wales, a painted bow eye and a dark wet band at the waterline, with rails along both sides and a planked deck.
+- **Stern:** a castle with lattice windows under an arched roof, a railed gallery, the rudder and its tiller.
+- **On deck:** a thatched shelter amidships, glazed cargo jars, crates, a rope coil, a windlass and a wooden anchor.
+- **Rig:** unstayed masts with cambered lug sails of matting between a boom and a yard. Bamboo battens run across the sails, and their sheets fan down to the stern.
+- **Mooring:** lines to the landing's bollards and a gangway.
+- **Details:** soft foam where the hull meets the water, and Mae Im's jasmine at the bow.
 
 Cutscene steps (`pause`, `walkTo`, `line`) are awaitable and driven by the frame loop; skipping resolves them all and applies the end state. Special-event animations play through `actors.play(id, action)`, only when the character faces the direction the frames were drawn for.
 

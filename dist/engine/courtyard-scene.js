@@ -101,41 +101,93 @@ export async function createCourtyard(scene){
  // Mooring platform and rope bollards.
  for(let i=0;i<22;i++)box(9.4+i*.22,.03,1,.21,.14,3.2,wood);for(const z of[-.45,2.45])box(11.75,-.12,z,4.8,.16,.16,dark);
  for(const x of[10.8,13.8])for(const z of[-.5,2.5]){mesh(new THREE.CylinderGeometry(.1,.13,1,8),dark,x,.18,z);}
- // The captain's junk, moored along the north side of the landing: a flat-transom hull with a raised stern (toward the
- // bank) and a stern castle, painted sides with the bow eye, two masts with battened lug sails of matting, a red pennant,
- // mooring lines to the bollards, a gangway, and Mae Im's jasmine at the bow.
- {const L=8.6,B=2.5,H=1.25,X=15.2,Z=-2.25,Y=-.23,deck=u=>Y+H/2+1.0*(1-u)**3+.45*u*u;
-  const hullGeo=new THREE.BoxGeometry(L,H,B,24,3,6),pos=hullGeo.attributes.position;
-  for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),u=x/L+.5,t=y/H+.5,beam=.6+.4*Math.sin(Math.PI*Math.min(1,Math.max(0,u*1.04-.02)))**.5;
-   pos.setXYZ(i,x,y+t*(1.0*(1-u)**3+.45*u*u)+(1-t)*.3*(2*u-1)**2,z*beam*(.5+.5*t));}
+ // The captain's junk, moored along the north side of the landing, after Siamese and Chinese trading junks of the 1680s:
+ // a flat-transom hull with sheer and a painted bow eye, rails, a planked deck, a stern castle with an arched roof over
+ // the transom and rudder, a thatched deck shelter, cargo jars, a windlass and wooden anchor, and unstayed masts with
+ // cambered, battened lug sails of matting whose sheets fan down to the stern. Mae Im's jasmine hangs at the bow.
+ {const L=10,B=2.8,H=1.3,X=15.8,Z=-2.4,Y=-.23,sheer=u=>1.05*(1-u)**3+.5*u*u,deck=u=>Y+H/2+sheer(u),at=u=>X-L/2+u*L;
+  const beam=u=>.6+.4*Math.sin(Math.PI*Math.min(1,Math.max(0,u*1.04-.02)))**.5,half=u=>B/2*beam(u);
+  const hullGeo=new THREE.BoxGeometry(L,H,B,30,4,8),pos=hullGeo.attributes.position;
+  for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),u=x/L+.5,t=y/H+.5;
+   pos.setXYZ(i,x,y+t*sheer(u)+(1-t)*.3*(2*u-1)**2,z*beam(u)*(.5+.5*t));}
   hullGeo.computeVertexNormals();
-  // Side planking: dark hull, red and cream bands under the rail, the painted eye near the bow. The far side is mirrored.
-  const side=document.createElement('canvas');side.width=512;side.height=64;const c=side.getContext('2d');
-  c.fillStyle='#3d2b1d';c.fillRect(0,0,512,64);c.strokeStyle='#2a1d13';c.lineWidth=1;for(let y=16;y<64;y+=6){c.beginPath();c.moveTo(0,y);c.lineTo(512,y);c.stroke();}
-  c.fillStyle='#8f2a1c';c.fillRect(0,0,512,9);c.fillStyle='#e2d4b0';c.fillRect(0,9,512,3);c.fillStyle='#8f2a1c';c.fillRect(0,12,512,2);
-  c.fillStyle='#efe6cc';c.beginPath();c.ellipse(470,24,14,8,0,0,7);c.fill();c.fillStyle='#16110c';c.beginPath();c.arc(474,24,5,0,7);c.fill();
-  const sideTex=new THREE.CanvasTexture(side);sideTex.colorSpace=THREE.SRGBColorSpace;const farTex=sideTex.clone();farTex.wrapS=THREE.RepeatWrapping;farTex.repeat.x=-1;farTex.needsUpdate=true;
-  const red=mat('#8f2a1c'),hull=mesh(hullGeo,[red,red,mat('#8a6a45'),dark,mat('#ffffff',{map:sideTex}),mat('#ffffff',{map:farTex})],X,Y,Z,true);hull.receiveShadow=true;
-  const at=u=>X-L/2+u*L;
-  // Stern castle with an overhanging roof.
-  box(at(.1),deck(.1)+.35,Z,1.5,.9,1.8,red);box(at(.1),deck(.1)+.86,Z,1.8,.12,2.15,dark);box(at(.1)+.76,deck(.1)+.35,Z,.04,.5,.9,mat('#d9b56b'));
-  // Masts (the foremast raked forward) and battened lug sails, shaped longer aft of the mast as on Siamese junks.
-  // Sails of woven matting (ShapeGeometry UVs are in metres, so the weave tiles once per metre), hoisted part-way at the mooring.
-  const mat2=document.createElement('canvas');mat2.width=mat2.height=32;const w2=mat2.getContext('2d');w2.fillStyle='#b98a55';w2.fillRect(0,0,32,32);
-  for(let i=0;i<32;i+=4){w2.fillStyle=i%8?'#a67646':'#c89a62';w2.fillRect(i,0,2,32);w2.fillStyle='#9b6c3f40';w2.fillRect(0,i+1,32,1);}
-  const weave=new THREE.CanvasTexture(mat2);weave.colorSpace=THREE.SRGBColorSpace;weave.wrapS=weave.wrapT=THREE.RepeatWrapping;weave.magFilter=THREE.NearestFilter;
-  const sail=mat('#ffffff',{map:weave,side:THREE.DoubleSide}),rake=new THREE.CylinderGeometry(.06,.1,5.2,8);rake.rotateZ(-.12);
-  mesh(new THREE.CylinderGeometry(.07,.11,7.6,8),dark,at(.55),deck(.55)+3.8,Z);mesh(rake,dark,at(.86)+.3,deck(.86)+2.6,Z);
-  function lug(mx,base,w,h,scale){const g=new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-w*.72,0),new THREE.Vector2(w*.28,0),new THREE.Vector2(w*.24,h),new THREE.Vector2(-w*.76,h*.84)]));
-   mesh(g,sail,mx,base,Z+.14);for(let k=0;k<=5;k++){const f=k/5;mesh(new THREE.BoxGeometry(w*(1+.04*f)*1.02,.05*scale,.05),dark,mx-w*.24-w*.02*f,base+h*(k<5?f:.92),Z+.17);}}
-  lug(at(.55),deck(.55)+1.7,3.8,3.3,1);lug(at(.86)+.35,deck(.86)+1.3,2.4,2.3,.8);
-  const pennant=new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0,0),new THREE.Vector2(-1.1,-.18),new THREE.Vector2(0,-.4)]));mesh(pennant,mat('#b3261c',{side:THREE.DoubleSide}),at(.55),deck(.55)+7.6,Z);
-  // Mooring lines from the rail to the landing's bollards, and the gangway down to the planks.
-  const ropeMat=mat('#8d7650'),up=new THREE.Vector3(0,1,0);
-  for(const[a,b]of[[[at(.2),deck(.2)-.1,Z+1],[10.8,.66,-.5]],[[at(.62),deck(.62)-.1,Z+1.15],[13.8,.66,-.5]]]){const A=new THREE.Vector3(...a),Bv=new THREE.Vector3(...b),g=new THREE.CylinderGeometry(.02,.02,A.distanceTo(Bv),5);g.rotateX(Math.PI/2);g.applyMatrix4(new THREE.Matrix4().lookAt(A,Bv,up));const m=A.clone().add(Bv).multiplyScalar(.5);mesh(g,ropeMat,m.x,m.y,m.z);}
-  const plank=new THREE.BoxGeometry(.6,.06,1.05);plank.rotateX(.62);mesh(plank,wood,at(.3),(deck(.3)+.12)/2,-.78);
+  const paint=(w,h,draw)=>{const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;};
+  // Sides: tarred planking with butt joints, two wales, red and cream bands under the rail, the bow eye, and a dark,
+  // weedy wet band at the waterline. The far side is mirrored so the eye is at the bow on both.
+  const sideTex=paint(1024,128,(c,w,h)=>{c.fillStyle='#3a2a1c';c.fillRect(0,0,w,h);let r=1685;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+   for(let y=24;y<h;y+=9){c.fillStyle='#2a1d13';c.fillRect(0,y,w,1);for(let x=rnd()*120;x<w;x+=90+rnd()*140)c.fillRect(x,y-8,1,8);c.fillStyle=`rgba(${80+rnd()*30},${58+rnd()*20},${36},.18)`;c.fillRect(0,y+1,w,7);}
+   c.fillStyle='#231810';c.fillRect(0,34,w,5);c.fillRect(0,52,w,4);
+   c.fillStyle='#8f2a1c';c.fillRect(0,0,w,15);c.fillStyle='#e2d4b0';c.fillRect(0,15,w,4);c.fillStyle='#8f2a1c';c.fillRect(0,19,w,3);
+   for(let x=20;x<w;x+=46){c.fillStyle='#d9b56b';c.fillRect(x,5,10,5);}
+   c.fillStyle='#1e2418';c.fillRect(0,62,w,7);c.fillStyle='#2f3b25';for(let x=0;x<w;x+=3)c.fillRect(x,58+rnd()*6,2,4);
+   c.fillStyle='#efe6cc';c.beginPath();c.ellipse(952,38,24,13,0,0,7);c.fill();c.fillStyle='#16110c';c.beginPath();c.arc(958,38,8,0,7);c.fill();c.fillStyle='#8f2a1c';c.lineWidth=3;c.strokeStyle='#8f2a1c';c.beginPath();c.ellipse(952,38,26,15,0,0,7);c.stroke();});
+  const farTex=sideTex.clone();farTex.wrapS=THREE.RepeatWrapping;farTex.repeat.x=-1;farTex.needsUpdate=true;
+  // Deck: planks running fore and aft, worn in the middle.
+  const deckTex=paint(512,128,(c,w,h)=>{c.fillStyle='#8a6a45';c.fillRect(0,0,w,h);let r=7;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+   for(let y=0;y<h;y+=8){c.fillStyle=`rgba(${120+rnd()*40},${90+rnd()*30},${55+rnd()*20},.5)`;c.fillRect(0,y,w,7);c.fillStyle='#4d3822';c.fillRect(0,y+7,w,1);for(let x=rnd()*80;x<w;x+=60+rnd()*90)c.fillRect(x,y,1,7);}
+   const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(40,28,16,.35)');g.addColorStop(.5,'rgba(255,240,210,.08)');g.addColorStop(1,'rgba(40,28,16,.35)');c.fillStyle=g;c.fillRect(0,0,w,h);});
+  const red=mat('#8f2a1c'),white=mat('#ffffff',{map:sideTex}),transom=paint(64,64,(c)=>{c.fillStyle='#7d2418';c.fillRect(0,0,64,64);c.fillStyle='#d9b56b';c.fillRect(0,8,64,4);c.fillRect(0,50,64,3);c.strokeStyle='#d9b56b';c.lineWidth=2;c.beginPath();c.arc(32,31,11,0,7);c.stroke();c.beginPath();c.arc(32,31,5,0,7);c.stroke();});
+  const hull=mesh(hullGeo,[mat('#ffffff',{map:transom}),red,mat('#ffffff',{map:deckTex}),dark,white,mat('#ffffff',{map:farTex})],X,Y,Z,true);hull.receiveShadow=true;
+  const tube=(pts,r,m,seg=24)=>mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p))),seg,r,5),m,0,0,0);
+  const up=new THREE.Vector3(0,1,0);
+  function line(a,b,r,m){const A=new THREE.Vector3(...a),Bv=new THREE.Vector3(...b),g=new THREE.CylinderGeometry(r,r,A.distanceTo(Bv),5);g.rotateX(Math.PI/2);g.applyMatrix4(new THREE.Matrix4().lookAt(A,Bv,up));const m2=A.clone().add(Bv).multiplyScalar(.5);return mesh(g,m,m2.x,m2.y,m2.z);}
+  // Rails along both sides, on turned posts.
+  const railMat=mat('#5a3a22');
+  for(const side of[-1,1]){const pts=[];for(let k=0;k<=16;k++){const u=.03+k*.94/16;pts.push([at(u),deck(u)+.28,Z+side*(half(u)-.05)]);}tube(pts,.035,railMat,40);
+   for(let k=0;k<=16;k+=2){const u=.03+k*.94/16;mesh(new THREE.BoxGeometry(.06,.3,.06),railMat,at(u),deck(u)+.14,Z+side*(half(u)-.05));}}
+  // Stern castle: panelled walls with lattice windows under an arched roof, a railed gallery, the rudder and its tiller.
+  const castleU=.1,cx=at(castleU),cy=deck(castleU),walls=paint(128,64,(c)=>{c.fillStyle='#7d2a1c';c.fillRect(0,0,128,64);c.fillStyle='#d9b56b';c.fillRect(0,0,128,4);c.fillRect(0,60,128,4);
+   for(const x of[14,52,90]){c.fillStyle='#1c130c';c.fillRect(x,18,24,26);c.strokeStyle='#d9b56b';c.lineWidth=2;c.strokeRect(x,18,24,26);c.beginPath();c.moveTo(x+12,18);c.lineTo(x+12,44);c.moveTo(x,31);c.lineTo(x+24,31);c.stroke();}});
+  mesh(new THREE.BoxGeometry(1.7,1,2.1),mat('#ffffff',{map:walls}),cx,cy+.5,Z);
+  const roofTex=paint(64,64,(c)=>{c.fillStyle='#3b2a1a';c.fillRect(0,0,64,64);for(let x=0;x<64;x+=4){c.fillStyle=x%8?'#4a3522':'#2e2014';c.fillRect(x,0,3,64);}});roofTex.wrapS=roofTex.wrapT=THREE.RepeatWrapping;roofTex.repeat.set(4,2);
+  const roof=new THREE.CylinderGeometry(1.25,1.25,2.1,14,1,true,0,Math.PI);roof.rotateZ(Math.PI/2);roof.scale(1,.45,1);mesh(roof,mat('#ffffff',{map:roofTex,side:THREE.DoubleSide}),cx-.05,cy+1,Z);
+  mesh(new THREE.BoxGeometry(2.1,.08,2.5),dark,cx-.05,cy+1.02,Z);
+  const stern=at(0);mesh(new THREE.BoxGeometry(.08,.34,2.1),railMat,stern-.25,deck(0)+.2,Z);
+  const rudder=new THREE.Shape([new THREE.Vector2(0,0),new THREE.Vector2(-1.1,-.2),new THREE.Vector2(-1.2,-1.4),new THREE.Vector2(-.2,-1.5),new THREE.Vector2(0,-1.2)]);
+  const blade=new THREE.ExtrudeGeometry(rudder,{depth:.1,bevelEnabled:false});blade.translate(0,0,-.05);mesh(blade,dark,stern+.35,deck(0)-.1,Z);
+  mesh(new THREE.CylinderGeometry(.08,.08,2.2,6),dark,stern+.2,deck(0)-.2,Z);line([stern+.2,deck(0)+.8,Z],[cx+1.2,cy+.75,Z],.04,dark);
+  // Thatched shelter amidships over the hatch, on four posts.
+  const thatch=paint(64,64,(c)=>{c.fillStyle='#8c6b3a';c.fillRect(0,0,64,64);let r=3;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;for(let i=0;i<260;i++){c.fillStyle=['#a5824a','#6e5230','#b8935a'][i%3];c.fillRect(rnd()*64,rnd()*64,1,4+rnd()*6);}for(let y=0;y<64;y+=10){c.fillStyle='#5c4428';c.fillRect(0,y,64,1);}});thatch.wrapS=thatch.wrapT=THREE.RepeatWrapping;thatch.repeat.set(3,2);
+  const su=.36,sx=at(su),sy=deck(su);const shelter=new THREE.CylinderGeometry(1.05,1.05,2,14,1,true,0,Math.PI);shelter.rotateZ(Math.PI/2);shelter.scale(1,.55,1);mesh(shelter,mat('#ffffff',{map:thatch,side:THREE.DoubleSide}),sx,sy+.95,Z);
+  for(const dx of[-.9,.9])for(const dz of[-.9,.9])mesh(new THREE.CylinderGeometry(.045,.05,1,6),railMat,sx+dx,sy+.5,Z+dz);
+  mesh(new THREE.BoxGeometry(1.5,.18,1.2),mat('#5d4128'),sx,sy+.09,Z);
+  // Cargo: glazed storage jars, lashed crates and a coil of rope.
+  const jarGeo=new THREE.LatheGeometry([[0,0],[.16,0],[.24,.12],[.27,.3],[.22,.48],[.12,.56],[.13,.62],[0,.62]].map(([x,y])=>new THREE.Vector2(x,y)),12),jarMat=mat('#4a3020',{roughness:.35,metalness:.1});
+  for(const[u,dz]of[[.5,-.7],[.53,-.25],[.5,.55],[.68,.7],[.71,.25]])mesh(jarGeo,jarMat,at(u),deck(u),Z+dz);
+  for(const[u,dz,s2]of[[.62,-.75,.5],[.645,-.72,.4],[.74,-.5,.45]])mesh(new THREE.BoxGeometry(s2,s2*.8,s2),mat('#8a6a40'),at(u),deck(u)+s2*.4,Z+dz);
+  const coil=new THREE.TorusGeometry(.22,.07,6,16);coil.rotateX(Math.PI/2);mesh(coil,mat('#8d7650'),at(.8),deck(.8)+.07,Z+.4);
+  // Windlass and wooden anchor at the bow.
+  const wx=at(.93),wy=deck(.93);const drum=new THREE.CylinderGeometry(.14,.14,1.6,10);drum.rotateX(Math.PI/2);mesh(drum,railMat,wx,wy+.35,Z);for(const dz of[-.85,.85])mesh(new THREE.BoxGeometry(.12,.5,.12),railMat,wx,wy+.25,Z+dz);
+  const bow=at(1);mesh(new THREE.BoxGeometry(.1,1.4,.1),dark,bow+.18,deck(1)-.55,Z+1.05);mesh(new THREE.BoxGeometry(.5,.08,.08),dark,bow+.18,deck(1)-1.2,Z+1.05);line([wx,wy+.35,Z+.7],[bow+.18,deck(1)+.15,Z+1.05],.02,mat('#8d7650'));
+  // Unstayed masts (the foremast raked forward).
+  const mainU=.56,foreU=.86;mesh(new THREE.CylinderGeometry(.08,.13,9,8),dark,at(mainU),deck(mainU)+4.5,Z);
+  const fore=new THREE.CylinderGeometry(.07,.11,6,8);fore.rotateZ(-.12);mesh(fore,dark,at(foreU)+.35,deck(foreU)+3,Z);
+  // Lug sails: a curved sheet of matting between a boom and a yard that peaks aft, the leech bellied outward, and
+  // bamboo battens across it; each second batten's sheet runs down to a block on the stern deck.
+  const weave=paint(64,256,(c,w,h)=>{c.fillStyle='#b98a55';c.fillRect(0,0,w,h);let r=11;const rnd=()=>(r=(r*16807)%2147483647)/2147483647;
+   for(let x=0;x<w;x+=4){c.fillStyle=x%8?'#a8784a':'#c79a62';c.fillRect(x,0,2,h);}for(let y=0;y<h;y+=3){c.fillStyle='rgba(90,60,30,.18)';c.fillRect(0,y,w,1);}
+   for(let k=0;k<7;k++){const y0=h*k/7,g=c.createLinearGradient(0,y0,0,y0+h/7);g.addColorStop(0,'rgba(255,235,190,.16)');g.addColorStop(1,'rgba(50,30,15,.3)');c.fillStyle=g;c.fillRect(0,y0,w,h/7);}
+   for(let i=0;i<14;i++){c.fillStyle=`rgba(70,45,25,${.08+rnd()*.12})`;c.fillRect(rnd()*w,rnd()*h,6+rnd()*14,8+rnd()*20);}});
+  const sailMat=mat('#ffffff',{map:weave,side:THREE.DoubleSide}),spar=mat('#6b5a3a'),sheetMat=mat('#8d7650');
+  function lug(mx,foot,w,h,panels,belly){const F=[w*.28,0],A=[-w*.72,h*.06],Hd=[w*.2,h*.84],P=[-w*.8,h];
+   const point=(u,v)=>{const rx=F[0]+(Hd[0]-F[0])*v,ry=F[1]+(Hd[1]-F[1])*v,lx=A[0]+(P[0]-A[0])*v-w*.12*Math.sin(Math.PI*v),ly=A[1]+(P[1]-A[1])*v;
+    return[mx+rx+(lx-rx)*u,foot+ry+(ly-ry)*u,Z+.16+belly*Math.sin(Math.PI*u)*(.55+.45*Math.sin(Math.PI*v))];};
+   const N=12,M=14,g=new THREE.BufferGeometry(),p=[],uv=[],idx=[];for(let j=0;j<=M;j++)for(let i=0;i<=N;i++){p.push(...point(i/N,j/M));uv.push(i/N,j/M);}
+   for(let j=0;j<M;j++)for(let i=0;i<N;i++){const a2=j*(N+1)+i,b2=a2+1,c2=a2+N+1,d2=c2+1;idx.push(a2,b2,d2,a2,d2,c2);}
+   g.setIndex(idx);g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();mesh(g,sailMat,0,0,0);
+   for(let k=0;k<=panels;k++){const v=k/panels,pts=[];for(let i=0;i<=6;i++){const q=point(i/6,v);pts.push([q[0],q[1],q[2]+.03]);}tube(pts,k===0||k===panels?.06:.028,k===0||k===panels?spar:dark,12);
+    if(k%2===0&&k<panels){const end=point(1,v);line(end,[at(.2),deck(.2)+.35,Z+.3],.012,sheetMat);}}
+   const head=point(0,1);line([mx,head[1]+.5,Z+.02],[head[0],head[1],head[2]],.02,sheetMat);}
+  lug(at(mainU),deck(mainU)+1.6,4.6,4.2,7,.35);lug(at(foreU)+.45,deck(foreU)+1.3,3,2.9,5,.25);
+  const pennant=new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0,0),new THREE.Vector2(-1.3,-.2),new THREE.Vector2(0,-.45)]));mesh(pennant,mat('#b3261c',{side:THREE.DoubleSide}),at(mainU),deck(mainU)+9,Z);
+  // Mooring lines to the landing's bollards, and the gangway down to the planks.
+  const ropeMat=mat('#8d7650');for(const[u,bx]of[[.12,10.8],[.4,13.8]])line([at(u),deck(u)+.25,Z+half(u)],[bx,.66,-.5],.022,ropeMat);
+  const gu=(13-at(0))/L,gy=deck(gu),gz=Z+half(gu),len=Math.hypot(gz- -.35,gy-.12),plank=new THREE.BoxGeometry(.62,.06,len);plank.rotateX(Math.atan2(gy-.12,gz- -.35));mesh(plank,wood,13,(gy+.12)/2,(gz-.35)/2);
   // Jasmine for Mae Ya Nang, the boat spirit, tied at the bow.
-  const garland=new THREE.TorusGeometry(.2,.05,6,14);garland.rotateY(Math.PI/2);mesh(garland,mat('#f4f0e2',{emissive:'#403c30'}),at(1)-.08,deck(1)-.12,Z);
+  const garland=new THREE.TorusGeometry(.2,.05,6,14);garland.rotateY(Math.PI/2);mesh(garland,mat('#f4f0e2',{emissive:'#403c30'}),bow-.05,deck(1)+.2,Z);
+  // Foam where the hull meets the water.
+  const foam=paint(256,64,(c,w,h)=>{c.clearRect(0,0,w,h);c.filter='blur(3px)';c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=5;c.beginPath();c.roundRect(14,12,w-28,h-24,20);c.stroke();});
+  const ring=new THREE.Mesh(new THREE.PlaneGeometry(L+.5,B+.5),new THREE.MeshBasicMaterial({map:foam,transparent:true,opacity:.22,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.set(X,-.272,Z);scene.add(ring);
  }
  // Lush canopy texture is original canvas artwork, instanced as crossed leaf clusters.
  const leafCanvas=document.createElement('canvas');leafCanvas.width=leafCanvas.height=128;const ctx=leafCanvas.getContext('2d');
