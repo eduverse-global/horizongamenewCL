@@ -6,9 +6,9 @@ import {POINTS,SPEED,DASH,onLanding,faceToward} from './courtyard-state.js';
 const FACING={down:'south',left:'west',right:'east',up:'north','down-right':'south-east','up-right':'north-east','up-left':'north-west','down-left':'south-west'},NPC=['official','merchant','innkeeper'],SIZE=2.1;
 // One full walk cycle (both steps) per 2 m walked: about 10 frames a second at walking speed, and the feet do not slide.
 const CYCLE=2;
-// Breathing only where PixelLab's breathing frames match the standing sprite's size: Khun Phithak Wari's and Tan Heng's
-// were redrawn 3-4 px shorter, which made them look shrunken, so they keep their standing frame.
-const BREATHES=new Set(['innkeeper']);
+// Characters stand still at rest (playtest preference). The PixelLab breathing loops stay in the atlas (layout.anim)
+// for cutscenes and special events: add an id here, or drive the rows from an event, to play one.
+const BREATHES=new Set();
 export async function createActors(scene){
  const [atlas,layout]=await Promise.all([new THREE.TextureLoader().loadAsync('/assets/siam-cast.png'),fetch('/assets/siam-cast.json').then(r=>r.json())]);
  atlas.colorSpace=THREE.SRGBColorSpace;atlas.magFilter=THREE.NearestFilter;atlas.minFilter=THREE.NearestFilter;atlas.generateMipmaps=false;
