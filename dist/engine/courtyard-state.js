@@ -15,7 +15,9 @@ export const BLOCKS=[
  [-7,6,2,1.4],[-8,-7,3,2],[-5.4,-.4,1,.6],[6.6,.4,1,.6]
 ];
 export const inside=p=>p.z< -3.75&&p.z> -9.8&&Math.abs(p.x)<4.8;
-export function walkable(x,z){return x>-11.6&&x<9.7&&z>-10.6&&z<10.8&&!BLOCKS.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2+.26&&Math.abs(z-bz)<d/2+.26);}
+// The river landing (planks from x=9.4 to 14.1) extends the walkable ground over the water.
+export const onLanding=(x,z)=>x>9.3&&x<13.9&&z>-.3&&z<2.3;
+export function walkable(x,z){return(onLanding(x,z)||(x>-11.6&&x<9.7&&z>-10.6&&z<10.8))&&!BLOCKS.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2+.26&&Math.abs(z-bz)<d/2+.26);}
 export function fresh(){return{...START,quest:'meet',choice:null,room:false,v:0};}
 export function restore(value){const s=fresh();if(value&&['meet','ledger','return','complete'].includes(value.quest)){s.quest=value.quest;if(['share','keep'].includes(value.choice)&&s.quest==='complete')s.choice=value.choice;
  if(Number.isFinite(value.x)&&Number.isFinite(value.z)&&walkable(value.x,value.z)){s.x=value.x;s.z=value.z;s.room=inside(s);if(DIRS.includes(value.facing))s.facing=value.facing;}}return s;}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {POINTS,SPEED,DASH} from './courtyard-state.js';
+import {POINTS,SPEED,DASH,onLanding} from './courtyard-state.js';
 // PixelLab cast atlas (art/pixellab): row 0 holds idle cells (the captain's eight facings, then the NPCs),
 // the other rows the captain's walk cycles; siam-cast.json names each idle column and gives each walk row's frame count.
 // SIZE follows HD-2D scale: characters large relative to buildings (door about 1.4x character height).
@@ -26,7 +26,7 @@ export async function createActors(scene){
  const walk=layout.walk[FACING[s.facing]];
  if(moving&&walk?.frames){walked+=dt*SPEED*(s.v??1)*(s.dash?DASH:1);cell(player.texture,Math.floor(walked/CYCLE*walk.frames)%walk.frames,walk.row);}
  else{walked=0;cell(player.texture,column('captain-'+FACING[s.facing]),0);}
- const height=s.z< -3.0?.34:s.z< -2.5?.2:.025;player.mesh.position.set(s.x,height,s.z);player.shadow.position.set(s.x,height+.005,s.z);glow.position.set(s.x,height+1.6,s.z+.6);
+ const height=s.z< -3.0?.34:s.z< -2.5?.2:onLanding(s.x,s.z)&&s.x>9.6?.1:.025;player.mesh.position.set(s.x,height,s.z);player.shadow.position.set(s.x,height+.005,s.z);glow.position.set(s.x,height+1.6,s.z+.6);
  // Y-only billboarding keeps feet grounded; stretching height by 1/cos(pitch) undoes the vertical squash of a camera looking down.
  const yaw=Math.atan2(camera.position.x-s.x,camera.position.z-s.z),pitch=Math.atan2(camera.position.y,Math.hypot(camera.position.x-s.x,camera.position.z-s.z)),tall=SIZE/Math.max(.5,Math.cos(pitch));
  for(const a of[player,...npcs]){a.mesh.rotation.y=yaw;a.mesh.scale.y=tall;}

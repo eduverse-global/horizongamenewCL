@@ -55,30 +55,51 @@ export async function createCourtyard(scene){
  const target=mesh(new THREE.CylinderGeometry(.38,.38,.23,20),mat('#b79559'),5.5,1.38,4.5,true);target.rotation.x=Math.PI/2;
  for(const r of[.12,.23,.34]){const ring=mesh(new THREE.TorusGeometry(r,.018,4,24),dark,5.5,1.38,4.63);}
  // River and irregular stone embankment. The walkable edge matches the collision bounds.
+ // Stylised water shared by both modes: turquoise shallows deepening to blue away from the bank, animated caustic
+ // cells, a foam line at the shore and twinkling glints. Local plane coords: the bank is at p.x=-10, world z=-10-p.y.
+ const waterCore=`uniform float time,night;varying vec3 p;
+ vec2 h2(vec2 q){q=vec2(dot(q,vec2(127.1,311.7)),dot(q,vec2(269.5,183.3)));return fract(sin(q)*43758.5453);}
+ float cells(vec2 x,float t){vec2 n=floor(x),f=fract(x);float a=8.,b=8.;for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){vec2 g=vec2(float(i),float(j));vec2 o=.5+.5*sin(t+6.2831*h2(n+g));vec2 r=g+o-f;float d=dot(r,r);if(d<a){b=a;a=d;}else if(d<b)b=d;}return sqrt(b)-sqrt(a);}
+ vec3 waterColor(out float depth){float shore=p.x+10.+sin(p.y*.9+time*.3)*.25;depth=smoothstep(.1,3.2,shore);
+  vec3 c=mix(vec3(.035,.30,.32),vec3(.008,.06,.19),depth);
+  float k=1.-smoothstep(0.,.16,cells(p.xy*vec2(.85,.6),time*.55)),k2=1.-smoothstep(0.,.12,cells(p.xy*1.7+3.1,time*.8+1.));
+  c+=(k*.35+k2*.18)*mix(.28,.035,depth)*vec3(.55,1.,.9);
+  // Broad wind streaks darken and lighten the deep water.
+  c*=.86+.28*smoothstep(-.6,1.,sin(p.x*1.1+sin(p.y*.35+time*.2)*2.+p.y*.45+time*.6))*depth;
+  float foam=smoothstep(.7,.05,shore+sin(p.y*4.+time*1.3)*.1+(h2(floor(p.xy*6.)).x-.5)*.25);c=mix(c,vec3(.85,.97,.95),foam*.75);
+  vec2 cell=floor(p.xy*4.5);vec2 hp=h2(cell);vec2 fp=fract(p.xy*4.5)-hp;float band=.4+.6*smoothstep(.3,1.,sin(p.x*.35-p.y*.22+time*.15)*.5+.5);
+  float tw=step(.6,hp.y)*pow(max(0.,sin(time*2.6+hp.x*60.)),16.)*smoothstep(.09,0.,length(fp))*band*smoothstep(.5,3.,shore);
+  c*=mix(1.,.32,night);return c+tw*vec3(2.2,2.3,2.1)*mix(1.,.5,night);}`;
  const water=new THREE.ShaderMaterial({uniforms:{time:{value:0},night:{value:0}},vertexShader:`varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
- fragmentShader:`uniform float time,night;varying vec3 p;void main(){float w=sin(p.x*6.+p.y*2.+time*.9)*sin(p.y*8.-time*.6);float fine=pow(max(0.,sin(p.x*31.+sin(p.y*7.)+time)*sin(p.y*27.-time)),12.);vec3 c=mix(vec3(.14,.39,.40),vec3(.28,.59,.57),w*.5+.5);c+=fine*.40;c*=mix(1.,.33,night);gl_FragColor=vec4(c,1.);
+ fragmentShader:waterCore+`void main(){float depth;gl_FragColor=vec4(waterColor(depth),1.);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
  }`});
  const river=mesh(new THREE.PlaneGeometry(20,80,1,1),water,20,-.28,-10,true);river.rotation.x=-Math.PI/2;river.castShadow=false;
- // Reflective river (Cinematic mode): a mirrored render of the scene, rippled and tinted with the water colour.
- // Performance mode shows the plain animated water above instead.
+ // Reflective river (Cinematic mode): the same water plus a rippled mirrored render of the scene, stronger in deep water.
  const mirrorShader={name:'RiverReflection',uniforms:{color:{value:null},tDiffuse:{value:null},textureMatrix:{value:null},time:{value:0},night:{value:0}},
  vertexShader:`uniform mat4 textureMatrix;varying vec4 vUv;varying vec3 p;void main(){p=position;vUv=textureMatrix*vec4(position,1.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
- fragmentShader:`uniform sampler2D tDiffuse;uniform float time,night;varying vec4 vUv;varying vec3 p;void main(){float w=sin(p.x*6.+p.y*2.+time*.9)*sin(p.y*8.-time*.6);
- vec4 uv=vUv;uv.xy+=vec2(sin(p.y*3.1+time*1.3),cos(p.x*2.7+time*1.1))*.012*uv.w;vec3 refl=texture2DProj(tDiffuse,uv).rgb;
- vec3 base=mix(vec3(.018,.055,.045),vec3(.04,.095,.08),w*.5+.5)*mix(1.,.35,night);
- float fine=pow(max(0.,sin((p.x+p.y)*9.+time*1.4+sin(p.y*1.7))*sin((p.x-p.y*1.3)*7.-time)),18.);
- gl_FragColor=vec4(base+refl*vec3(.12,.16,.15)+fine*.05*mix(1.,.4,night),1.);
+ fragmentShader:`uniform sampler2D tDiffuse;varying vec4 vUv;`+waterCore+`void main(){float depth;vec3 c=waterColor(depth);
+ vec4 uv=vUv;uv.xy+=vec2(sin(p.y*3.1+time*1.3),cos(p.x*2.7+time*1.1))*.01*uv.w;vec3 refl=texture2DProj(tDiffuse,uv).rgb;
+ gl_FragColor=vec4(c+refl*vec3(.16,.2,.24)*mix(.55,1.,depth),1.);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
  }`};
  const mirror=new Reflector(new THREE.PlaneGeometry(20,80),{textureWidth:1024,textureHeight:1024,clipBias:.003,multisample:0,shader:mirrorShader});
  mirror.position.set(20,-.279,-10);mirror.rotation.x=-Math.PI/2;scene.add(mirror);river.visible=false;
+ // Lily pads (notched discs, a few with pink blossoms) in the shallows, and reed clumps with cattail heads along the bank,
+ // kept clear of the landing.
+ const padGeo=new THREE.CircleGeometry(.32,14,.35,5.7);padGeo.rotateX(-Math.PI/2);const padMat=mat('#4f8f3a',{side:THREE.DoubleSide});
+ const bloom=new THREE.SphereGeometry(.08,7,5),bloomMat=mat('#f3a6c0',{emissive:'#6a2a3a',emissiveIntensity:.3});
+ for(let i=0;i<46;i++){const z=-12+rand()*24;if(z>-1.2&&z<3.2)continue;const x=10.7+Math.pow(rand(),1.6)*2.6,sc=.6+rand()*.7;
+  instance('lily',padGeo,padMat,x,-.265,z,sc,1,sc,rand()*7,['#4f8f3a','#5f9d44','#3f7c33'][i%3]);if(i%6===0)instance('bloom',bloom,bloomMat,x+.05,-.2,z,1,.7,1);}
+ const reedGeo=new THREE.CylinderGeometry(.018,.026,1,4);reedGeo.translate(0,.5,0);const reedMat=mat('#6f8f3e'),headGeo=new THREE.CylinderGeometry(.045,.045,.22,6),headMat=mat('#6a4020');
+ for(let c=0;c<9;c++){const z0=[-9,-6.8,-4.6,-2.4,3.8,5.6,7.4,9.2,-11][c],x0=10.35+rand()*.5;for(let r=0;r<7;r++){const x=x0+(rand()-.5)*.5,z=z0+(rand()-.5)*.7,h=.9+rand()*.8,lean=(rand()-.5)*.25;
+  instance('reed',reedGeo,reedMat,x,-.28,z,1,h,1,rand()*7,['#6f8f3e','#7d9c45','#5c7a33'][r%3],lean);if(r%2===0)instance('cattail',headGeo,headMat,x+Math.sin(lean)*-h*.0,-.28+h*.92,z,1,1,1);}}
  const rock=new THREE.DodecahedronGeometry(1,0),rockMat=mat('#a4a184');
- for(let z=-20;z<25;z+=.52){instance('bank',rock,rockMat,10.2+rand()*.15,-.12,z,.45+rand()*.3,.4+rand()*.2,.4,rand()*6,['#797f6b','#a5a88d','#bec0a1'][Math.floor(rand()*3)]);}
+ for(let z=-20;z<25;z+=.52){if(z>-.8&&z<2.8)continue;instance('bank',rock,rockMat,10.2+rand()*.15,-.12,z,.45+rand()*.3,.4+rand()*.2,.4,rand()*6,['#797f6b','#a5a88d','#bec0a1'][Math.floor(rand()*3)]);}
  // Mooring platform and rope bollards.
- for(let i=0;i<16;i++)box(10.7+i*.22,.03,1,.21,.14,3.2,wood);
+ for(let i=0;i<22;i++)box(9.4+i*.22,.03,1,.21,.14,3.2,wood);for(const z of[-.45,2.45])box(11.75,-.12,z,4.8,.16,.16,dark);
  for(const x of[10.8,13.8])for(const z of[-.5,2.5]){mesh(new THREE.CylinderGeometry(.1,.13,1,8),dark,x,.18,z);}
  // Lush canopy texture is original canvas artwork, instanced as crossed leaf clusters.
  const leafCanvas=document.createElement('canvas');leafCanvas.width=leafCanvas.height=128;const ctx=leafCanvas.getContext('2d');
