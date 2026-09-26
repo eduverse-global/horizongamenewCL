@@ -18,11 +18,11 @@ function close(){if(activeDialogue)actors?.release(activeDialogue);dialog.close(
 // Speakers map to the Horinzonnext quay cast and to their cell in the Gemini portrait atlas (captain is cell 0).
 const CAST={official:['harbour_official',1,'KROM THA · ROYAL LANDING','กรมท่า · ท่าเรือหลวง'],merchant:['junk_merchant',2,'JUNK MERCHANT','พ่อค้าสำเภา'],innkeeper:['innkeeper',3,'RIVER LODGE','เรือนพักริมน้ำ']};
 const visits={};
-// Layered portraits: a cut-out character over a backdrop for the current location and time of day (Mae Im first);
-// other speakers use their cell in the painted portrait atlas.
-const LAYERED={innkeeper:'innkeeper'},LOCATION='courtyard';
+// Layered portraits: a cut-out character (day or dusk grade) over a backdrop for the current location and time of day;
+// speakers without one fall back to their cell in the painted portrait atlas.
+const LAYERED={official:'official',merchant:'merchant',innkeeper:'innkeeper'},LOCATION='courtyard';
 function portrait(cell,id){const el=$('portrait');
- if(LAYERED[id]){Object.assign(el.style,{backgroundImage:`url('/assets/portraits/${LAYERED[id]}.png'),url('/assets/portraits/bg-${LOCATION}-${evening?'evening':'day'}.jpg')`,backgroundSize:'cover, cover',backgroundPosition:'50% 0, 50% 50%',imageRendering:'pixelated'});return;}
+ if(LAYERED[id]){Object.assign(el.style,{backgroundImage:`url('/assets/portraits/${LAYERED[id]}${evening?'-evening':''}.png'),url('/assets/portraits/bg-${LOCATION}-${evening?'evening':'day'}.jpg')`,backgroundSize:'cover, cover',backgroundPosition:'50% 0, 50% 50%',imageRendering:'pixelated'});return;}
  Object.assign(el.style,{backgroundImage:'',imageRendering:''});
 const w=el.clientWidth||210,h=el.clientHeight||250,size=Math.max(w,h);el.style.backgroundSize=`${4*size}px ${size}px`;el.style.backgroundPosition=`${-(cell*size+(size-w)/2)}px 0px`;}
 function showDialogue(id){const first=activeDialogue!==id;activeDialogue=id;keys.clear();path=[];pending=null;const cast=CAST[id];$('portrait').hidden=!cast;$('role').textContent=cast?cast[lang==='th'?3:2]:'NARAI';$('speaker').textContent=cast?say(QUAY_CAST[cast[0]].name,lang):t(id);

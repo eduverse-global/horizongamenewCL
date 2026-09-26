@@ -26,6 +26,12 @@ CHARACTERS = {
                   'Mae Im, a young Siamese woman in her early twenties who keeps a riverside lodge: youthful, lively face with a '
                   'playful smile, bright dark eyes, short black hair cropped in the Ayutthaya style, small gold earrings, green '
                   'pha sabai breast cloth draped over one shoulder, holding a jasmine garland.'),
+    'official': ('official-south',
+                 'Khun Phithak Wari, a middle-aged Siamese harbour official of the Krom Tha: mahadthai haircut, short grey-flecked beard, '
+                 'fitted long-sleeved white jacket with gold buttons, patterned red-and-gold sash, holding a folded ledger; dignified, courteous and shrewd.'),
+    'merchant': ('merchant-south',
+                 'Tan Heng, a plump, good-humoured Chinese junk merchant: dark blue-grey long robe with side fastening, black skullcap, '
+                 'moustache, an abacus at his belt; a trader\'s knowing smile.'),
 }
 LOCATIONS = {
     'courtyard-day': 'the riverside landing of a merchant\'s courtyard: a teak pavilion with a red clay-tile roof and hanging lanterns, '
@@ -50,9 +56,19 @@ def generate(prompt, images, aspect):
         if data: return Image.open(io.BytesIO(base64.b64decode(data['data']))).convert('RGB')
     raise RuntimeError('no image in reply: ' + json.dumps(reply)[:500])
 
-def finish(img, width, colours):
-    # Pixel-painted finish: livelier colour, coarse grid, limited palette, hard square pixels.
-    img = ImageEnhance.Brightness(ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.2)).enhance(1.1)).enhance(1.05)
+def grade(img, backdrop=False):
+    # One colour grade for every portrait, matched to the courtyard scene: slightly muted saturation, shadows pulled
+    # toward the scene's olive green, highlights toward warm lantern light. Backdrops sit darker and softer.
+    img = ImageEnhance.Color(img).enhance(.8 if backdrop else .9)
+    lut = []
+    for ch, (shadow, light) in enumerate([(34, 255), (40, 244), (26, 214)]):
+        lut += [round(shadow + (light - shadow) * (v / 255) ** (1.04 if backdrop else 1.0)) for v in range(256)]
+    img = img.point(lut)
+    return ImageEnhance.Brightness(img).enhance(.86) if backdrop else img
+
+def finish(img, width, colours, backdrop=False):
+    # Pixel-painted finish: shared scene grade, coarse grid, limited palette, hard square pixels.
+    img = grade(img, backdrop)
     small = img.resize((width, round(img.height * width / img.width)), Image.LANCZOS)
     return small.quantize(colours, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGB'), small.size
 
@@ -86,7 +102,14 @@ def character(cid):
                   'First image: pixel-art sprite of this character (identity, costume, colours). Second image: style reference.')
         generate(prompt, [sp, Image.open(STYLE_REF).convert('RGB')], '3:4').save(path); print('generated', cid)
     img = Image.open(path).convert('RGB'); w = 150; size = (w, round(img.height * w / img.width))
-    cutout(img, size).resize((size[0] * 4, size[1] * 4), Image.NEAREST).save(out / f'{cid}.png'); print('wrote portraits/%s.png' % cid)
+    cut = cutout(img, size).resize((size[0] * 4, size[1] * 4), Image.NEAREST); cut.save(out / f'{cid}.png')
+    # Dusk variant: dimmer, shadows cooled toward the evening sky, highlights kept warm as if lit by lanterns.
+    rgb, alpha = cut.convert('RGB'), cut.split()[3]
+    lut = []
+    for shadow, light in [(10, 214), (12, 180), (34, 150)]:
+        lut += [round(shadow + (light - shadow) * (v / 255) ** 1.08) for v in range(256)]
+    dusk = rgb.point(lut).convert('RGBA'); dusk.putalpha(alpha); dusk.save(out / f'{cid}-evening.png')
+    print('wrote portraits/%s.png and %s-evening.png' % (cid, cid))
 
 def location(name):
     path = raw / f'bg-{name}.png'
@@ -95,7 +118,7 @@ def location(name):
                   f'(rich saturated colour, painterly light). Scene: {LOCATIONS[name]} {SETTING} No people, no text. Soft depth of field so a '
                   'character can stand in front; keep the centre calm. Tall framing.')
         generate(prompt, [Image.open(STYLE_REF).convert('RGB')], '3:4').save(path); print('generated', name)
-    small, size = finish(Image.open(path).convert('RGB'), 150, 64)
+    small, size = finish(Image.open(path).convert('RGB'), 150, 64, backdrop=True)
     small.resize((size[0] * 4, size[1] * 4), Image.NEAREST).save(out / f'bg-{name}.jpg', quality=90); print('wrote portraits/bg-%s.jpg' % name)
 
 if __name__ == '__main__':
