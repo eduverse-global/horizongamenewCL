@@ -1,0 +1,32 @@
+{
+ "cell": 48,
+ "columns": 7,
+ "rows": 5,
+ "idle": [
+  "captain-south",
+  "captain-west",
+  "captain-east",
+  "captain-north",
+  "official-south",
+  "merchant-south",
+  "innkeeper-south"
+ ],
+ "walk": {
+  "south": {
+   "row": 1,
+   "frames": 0
+  },
+  "west": {
+   "row": 2,
+   "frames": 6
+  },
+  "east": {
+   "row": 3,
+   "frames": 6
+  },
+  "north": {
+   "row": 4,
+   "frames": 6
+  }
+ }
+}

@@ -30,12 +30,17 @@ for f in sorted(src.glob('*.json')):
     if len(covered) != w * h: sys.exit(f'{f.name}: quadrants cover {len(covered)} of {w * h} pixels')
     img.save(out / (f.stem + '.png')); print('wrote', f.stem + '.png')
 
-# Game atlas, one 48x48 cell per column. The captain's west view mirrors his east view.
-from PIL import ImageOps
-CELLS = [('captain-south', False), ('captain-east', True), ('captain-east', False), ('captain-north', False),
-         ('official-south', False), ('merchant-south', False), ('innkeeper-south', False)]
-atlas = Image.new('RGBA', (48 * len(CELLS), 48), (0, 0, 0, 0))
-for i, (name, mirror) in enumerate(CELLS):
-    cell = Image.open(out / (name + '.png'))
-    atlas.paste(ImageOps.mirror(cell) if mirror else cell, (48 * i, 0))
-atlas.save(root / 'dist/assets/siam-cast.png'); print('wrote dist/assets/siam-cast.png')
+# Game atlas: row 0 holds one idle cell per column (captain south/west/east/north, then the NPCs);
+# rows 1-4 hold the captain's walk cycle (south, west, east, north) from art/pixellab/walk/.
+# The frame count of each walk row is written to dist/assets/siam-cast.json.
+CELLS = ['captain-south', 'captain-west', 'captain-east', 'captain-north', 'official-south', 'merchant-south', 'innkeeper-south']
+WALK = ['south', 'west', 'east', 'north']
+walk = {d: sorted((root / 'art/pixellab/walk').glob(f'captain-{d}-*.png'), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for d in WALK}
+cols = max(len(CELLS), *(len(v) for v in walk.values()))
+atlas = Image.new('RGBA', (48 * cols, 48 * (1 + len(WALK))), (0, 0, 0, 0))
+for i, name in enumerate(CELLS): atlas.paste(Image.open(out / (name + '.png')), (48 * i, 0))
+for r, d in enumerate(WALK, 1):
+    for i, f in enumerate(walk[d]): atlas.paste(Image.open(f), (48 * i, 48 * r))
+atlas.save(root / 'dist/assets/siam-cast.png')
+(root / 'dist/assets/siam-cast.json').write_text(json.dumps({'cell': 48, 'columns': cols, 'rows': 1 + len(WALK), 'idle': CELLS, 'walk': {d: {'row': r, 'frames': len(walk[d])} for r, d in enumerate(WALK, 1)}}, indent=1) + '\n')
+print('wrote dist/assets/siam-cast.png and siam-cast.json')
