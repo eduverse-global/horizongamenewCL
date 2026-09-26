@@ -22,3 +22,7 @@ If the file host is allowed, download the rotations or the spritesheet directly 
 `walk/captain-<direction>-<frame>.png`: 6 frames per direction. West, east and north come from PixelLab's `walking-6-frames` template. That template, and the 8-frame one, turned the captain's back to the camera in some south-facing frames, so south uses v3 mode ("walking forward toward the viewer"). Its last frame has a slight dark smudge across the face. The frames came from the character spritesheet endpoint on `api.pixellab.ai`; v3 cells are 64 px, cropped to the centre 48 px, which was checked to line up exactly with the idle frames. The atlas row layout is in `dist/assets/siam-cast.json`.
 
 The idle frames rebuilt from text exports were checked against PixelLab's originals and are identical.
+
+## Diagonals
+
+The captain's four diagonal idle frames are PixelLab's own rotations. The diagonal walk cycles (`walk/captain-{south-east,north-east,north-west,south-west}-*.png`) are v3 mode, 6 frames each, cropped from 64 px cells to the centre 48 px and checked for alignment. The atlas now has 11 idle columns and 8 walk rows.

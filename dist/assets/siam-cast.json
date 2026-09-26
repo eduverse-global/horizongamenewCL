@@ -1,12 +1,16 @@
 {
  "cell": 48,
- "columns": 7,
- "rows": 5,
+ "columns": 11,
+ "rows": 9,
  "idle": [
   "captain-south",
   "captain-west",
   "captain-east",
   "captain-north",
+  "captain-south-east",
+  "captain-north-east",
+  "captain-north-west",
+  "captain-south-west",
   "official-south",
   "merchant-south",
   "innkeeper-south"
@@ -26,6 +30,22 @@
   },
   "north": {
    "row": 4,
+   "frames": 6
+  },
+  "south-east": {
+   "row": 5,
+   "frames": 6
+  },
+  "north-east": {
+   "row": 6,
+   "frames": 6
+  },
+  "north-west": {
+   "row": 7,
+   "frames": 6
+  },
+  "south-west": {
+   "row": 8,
    "frames": 6
   }
  }

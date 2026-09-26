@@ -30,12 +30,14 @@ for f in sorted(src.glob('*.json')):
     if len(covered) != w * h: sys.exit(f'{f.name}: quadrants cover {len(covered)} of {w * h} pixels')
     img.save(out / (f.stem + '.png')); print('wrote', f.stem + '.png')
 
-# Game atlas: row 0 holds one idle cell per column (captain south/west/east/north, then the NPCs);
-# rows 1-4 hold the captain's walk cycle (south, west, east, north) from art/pixellab/walk/.
+# Game atlas: row 0 holds one idle cell per column (the captain's eight facings, then the NPCs);
+# rows 1-8 hold the captain's walk cycles in the same direction order, from art/pixellab/walk/.
 # The frame count of each walk row is written to dist/assets/siam-cast.json.
-CELLS = ['captain-south', 'captain-west', 'captain-east', 'captain-north', 'official-south', 'merchant-south', 'innkeeper-south']
-WALK = ['south', 'west', 'east', 'north']
-walk = {d: sorted((root / 'art/pixellab/walk').glob(f'captain-{d}-*.png'), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for d in WALK}
+WALK = ['south', 'west', 'east', 'north', 'south-east', 'north-east', 'north-west', 'south-west']
+CELLS = [f'captain-{d}' for d in WALK] + ['official-south', 'merchant-south', 'innkeeper-south']
+import re
+# Exact names only: 'south' must not pick up 'south-east' frames.
+walk = {d: sorted((p for p in (root / 'art/pixellab/walk').glob('captain-*.png') if re.fullmatch(f'captain-{d}-\\d+', p.stem)), key=lambda p: int(p.stem.rsplit('-', 1)[1])) for d in WALK}
 cols = max(len(CELLS), *(len(v) for v in walk.values()))
 atlas = Image.new('RGBA', (48 * cols, 48 * (1 + len(WALK))), (0, 0, 0, 0))
 for i, name in enumerate(CELLS): atlas.paste(Image.open(out / (name + '.png')), (48 * i, 0))

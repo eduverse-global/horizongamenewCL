@@ -17,7 +17,8 @@ export const BLOCKS=[
 export const inside=p=>p.z< -3.75&&p.z> -9.8&&Math.abs(p.x)<4.8;
 export function walkable(x,z){return x>-11.6&&x<9.7&&z>-10.6&&z<10.8&&!BLOCKS.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2+.26&&Math.abs(z-bz)<d/2+.26);}
 export function fresh(){return{...START,quest:'meet',choice:null,room:false,v:0};}
-export function restore(value){const s=fresh();if(value&&['meet','ledger','return','complete'].includes(value.quest)){s.quest=value.quest;if(['share','keep'].includes(value.choice)&&s.quest==='complete')s.choice=value.choice;}return s;}
+export function restore(value){const s=fresh();if(value&&['meet','ledger','return','complete'].includes(value.quest)){s.quest=value.quest;if(['share','keep'].includes(value.choice)&&s.quest==='complete')s.choice=value.choice;
+ if(Number.isFinite(value.x)&&Number.isFinite(value.z)&&walkable(value.x,value.z)){s.x=value.x;s.z=value.z;s.room=inside(s);if(DIRS.includes(value.facing))s.facing=value.facing;}}return s;}
 // Free 8-way movement (as in HD-2D towns): diagonals are normalised, walls are slid along, and speed
 // eases in over ~80 ms. Facing follows the dominant axis, keeping the current one on exact diagonals.
 export const SPEED=3.4;
@@ -29,7 +30,10 @@ export function approachRoute(s,p,isPerson){
  for(const spot of[...sides,{x:p.x,z:p.z+APPROACH}]){const r=route(s,spot);if(r.length)return r;}
  return [];
 }
-export function faceToward(s,p){const dx=p.x-s.x,dz=p.z-s.z;s.facing=Math.abs(dx)>Math.abs(dz)?(dx<0?'left':'right'):(dz<0?'up':'down');}
+export function faceToward(s,p){s.facing=DIRS[sector(p.x-s.x,p.z-s.z)];}
+// Eight facings, clockwise from up (away from the camera), as Dragon Quest I & II HD-2D added diagonals.
+export const DIRS=['up','up-right','right','down-right','down','down-left','left','up-left'];
+const sector=(dx,dz)=>(Math.round(Math.atan2(dx,-dz)/(Math.PI/4))+8)%8;
 // dash (hold Shift, as added in Dragon Quest I & II HD-2D) moves 1.8x faster.
 export const DASH=1.8;
 export function move(s,dx,dz,dt,dash=false){
@@ -37,8 +41,9 @@ export function move(s,dx,dz,dt,dash=false){
  dt=Math.min(dt,.05);const len=Math.hypot(dx,dz);
  if(!len){s.v=0;return false;}
  dx/=len;dz/=len;s.v=Math.min(1,(s.v||0)+dt/.08);
- const ax=Math.abs(dx),az=Math.abs(dz),vertical=s.facing==='up'||s.facing==='down';
- if(vertical?az>=ax*.77:az>ax*1.3)s.facing=dz<0?'up':'down';else s.facing=dx<0?'left':'right';
+ // Keep the current facing until the heading leaves its 45° sector by more than ~8°, so near-boundary walks do not flicker.
+ const heading=Math.atan2(dx,-dz),current=DIRS.indexOf(s.facing),off=current<0?9:Math.abs(Math.atan2(Math.sin(heading-current*Math.PI/4),Math.cos(heading-current*Math.PI/4)));
+ if(off>Math.PI/8+.14)s.facing=DIRS[sector(dx,dz)];
  s.dash=dash;const step=dt*SPEED*s.v*(dash?DASH:1);
  for(const[mx,mz]of[[dx,dz],[dx,0],[0,dz]]){if(!mx&&!mz)continue;const x=s.x+mx*step,z=s.z+mz*step;if(walkable(x,z)){s.x=x;s.z=z;s.room=inside(s);return true;}}
  return false;
